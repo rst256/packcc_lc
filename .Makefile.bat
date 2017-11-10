@@ -31,7 +31,7 @@ IF NOT %ERRORLEVEL% EQU 0 GOTO error_l
 echo successful
 
 echo ----------- run lex1 ... ----------
-%ROOT%\lc.exe %ROOT%\lc-test.lc
+%ROOT%\lc.exe %ROOT%\lc-test.lc -o lc-test.c
 IF NOT %ERRORLEVEL% EQU 0 GOTO error_l
 echo --------- test successful ---------
 

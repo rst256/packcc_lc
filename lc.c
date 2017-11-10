@@ -21,26 +21,32 @@ static size_t strnlen(const char *str, size_t maxlen) {
 
 #include "lc.h"
 
-    int col = 1, line = 1; static line_begin_pos=0;
-    int pcc_getchar(parser_t* p){ 
-            int c = fgetc(p->input); 
-            return c; 
-    }
+        static FILE* output;
 
-#define PCC_GETCHAR(auxil) pcc_getchar(auxil)
-#define PCC_BUFFERSIZE 1024
+        int col = 1, line = 1; static line_begin_pos=0;
+        int pcc_getchar(parser_t* p){ 
+                int c = fgetc(p->input); 
+                return c; 
+        }
 
-    #define  _ERROR(F, L, C, FN, ...) { fprintf(stderr, "%s:%d:%d: {%s} ", F, L, C, FN); fprintf(stderr, __VA_ARGS__); exit(0); }
-    #define  ERROR(...) _ERROR(auxil->file_name, (_0s), (_0e), __FUNCTION__, __VA_ARGS__)
+    #define PCC_GETCHAR(auxil) pcc_getchar(auxil)
+    #define PCC_BUFFERSIZE 1024
 
-    #define  _WARN(F, L, C, ...){ fprintf(stderr, "%s:%d:%d: ", F, L, C); fprintf(stderr, __VA_ARGS__); }
-    #define  WARN(...) _WARN(auxil->file_name, (_0s), (_0e), __VA_ARGS__)
+        #define  _ERROR(F, L, C, FN, ...) { fprintf(stderr, "%s:%d:%d: {%s} ", F, L, C, FN); fprintf(stderr, __VA_ARGS__); exit(0); }
+        #define  ERROR(...) _ERROR(auxil->file_name, (_0s), (_0e), __FUNCTION__, __VA_ARGS__)
 
-    #define PCC_ERROR(auxil) pcc_error(auxil, __FILE__, __LINE__, __FUNCTION__)
-    static void pcc_error(parser_t* p, const char *f, int l, const char *fn) {
-            fprintf(stderr, "%s:%d: Syntax error in %s \n", f, l, fn);
-            exit(1);
-    }
+        #define  _WARN(F, L, C, ...){ fprintf(stderr, "%s:%d:%d: ", F, L, C); fprintf(stderr, __VA_ARGS__); }
+        #define  WARN(...) _WARN(auxil->file_name, (_0s), (_0e), __VA_ARGS__)
+
+        #define  OUT(...) fprintf(output, __VA_ARGS__)
+
+        #define PCC_ERROR(auxil) pcc_error(auxil, __FILE__, __LINE__, __FUNCTION__)
+        static void pcc_error(parser_t* p, const char *f, int l, const char *fn) {
+                fprintf(stderr, "%s:%d: Syntax error in %s \n", f, l, fn);
+                exit(1);
+        }
+
+#define PCC_FREE(auxil, ptr)
 
 #ifndef PCC_BUFFERSIZE
 #define PCC_BUFFERSIZE 256
@@ -66,7 +72,7 @@ typedef struct pcc_range_tag {
     int end;
 } pcc_range_t;
 
-typedef ast_node_t pcc_value_t;
+typedef asn_t pcc_value_t;
 
 typedef parser_t*pcc_auxil_t;
 
@@ -955,6 +961,50 @@ static void pcc_action_block_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, p
 #undef auxil
 }
 
+static void pcc_action_assign_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+#define auxil (__pcc_ctx->auxil)
+#define __ (*__pcc_out)
+#define e (*__pcc_in->data.leaf.values.buf[0])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+#define _1 pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[0])
+#define _1s __pcc_in->data.leaf.capts.buf[0]->range.start
+#define _1e __pcc_in->data.leaf.capts.buf[0]->range.end
+#define _2 pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[1])
+#define _2s __pcc_in->data.leaf.capts.buf[1]->range.start
+#define _2e __pcc_in->data.leaf.capts.buf[1]->range.end
+    if(e.type==2) printf("assign: %s = %d %c %d;\n", _1, e.larg->number, e.op, e.rarg->number);
+#undef _2e
+#undef _2s
+#undef _2
+#undef _1e
+#undef _1s
+#undef _1
+#undef _0e
+#undef _0s
+#undef _0
+#undef e
+#undef __
+#undef auxil
+}
+
+static void pcc_action_expression_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+#define auxil (__pcc_ctx->auxil)
+#define __ (*__pcc_out)
+#define e (*__pcc_in->data.leaf.values.buf[0])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+    __ = e; 
+#undef _0e
+#undef _0s
+#undef _0
+#undef e
+#undef __
+#undef auxil
+}
+
 static void pcc_action_logic_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
 #define auxil (__pcc_ctx->auxil)
 #define __ (*__pcc_out)
@@ -988,6 +1038,30 @@ static void pcc_action_compare_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in,
 }
 
 static void pcc_action_term_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+#define auxil (__pcc_ctx->auxil)
+#define __ (*__pcc_out)
+#define l (*__pcc_in->data.leaf.values.buf[0])
+#define r (*__pcc_in->data.leaf.values.buf[1])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+#define _1 pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[0])
+#define _1s __pcc_in->data.leaf.capts.buf[0]->range.start
+#define _1e __pcc_in->data.leaf.capts.buf[0]->range.end
+    __.type=2; __.larg=&l; __.rarg=&r; __.op=_1[0]; 
+#undef _1e
+#undef _1s
+#undef _1
+#undef _0e
+#undef _0s
+#undef _0
+#undef r
+#undef l
+#undef __
+#undef auxil
+}
+
+static void pcc_action_term_1(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
 #define auxil (__pcc_ctx->auxil)
 #define __ (*__pcc_out)
 #define e (*__pcc_in->data.leaf.values.buf[2])
@@ -1080,7 +1154,7 @@ static void pcc_action_primary_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in,
 #define _1 pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[0])
 #define _1s __pcc_in->data.leaf.capts.buf[0]->range.start
 #define _1e __pcc_in->data.leaf.capts.buf[0]->range.end
-    __.number = atoi(_1); 
+    __.number = atoi(_1); __.type = 1; 
 #undef _1e
 #undef _1s
 #undef _1
@@ -1618,8 +1692,8 @@ L0000:;
 static pcc_thunk_chunk_t *pcc_evaluate_rule_assign(lc_context_t *ctx) {
     pcc_thunk_chunk_t *chunk = pcc_thunk_chunk__create(ctx->auxil);
     chunk->pos = ctx->pos;
-    pcc_value_table__resize(ctx->auxil, &chunk->values, 0);
-    pcc_capture_table__resize(ctx->auxil, &chunk->capts, 3);
+    pcc_value_table__resize(ctx->auxil, &chunk->values, 1);
+    pcc_capture_table__resize(ctx->auxil, &chunk->capts, 2);
     {
         int p = ctx->pos, q;
         if (!pcc_apply_rule(ctx, pcc_evaluate_rule_ident, &chunk->thunks, NULL)) goto L0000;
@@ -1657,12 +1731,15 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_assign(lc_context_t *ctx) {
     ) goto L0000;
     ctx->pos++;
     if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule_expression, &chunk->thunks, &(chunk->values.buf[0]))) goto L0000;
     {
-        int p = ctx->pos, q;
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_expression, &chunk->thunks, NULL)) goto L0000;
-        q = ctx->pos;
-        chunk->capts.buf[2].range.start = p;
-        chunk->capts.buf[2].range.end = q;
+        pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_assign_0, 1, 2);
+        thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
+        thunk->data.leaf.capts.buf[0] = &(chunk->capts.buf[0]);
+        thunk->data.leaf.capts.buf[1] = &(chunk->capts.buf[1]);
+        thunk->data.leaf.capt0.range.start = chunk->pos;
+        thunk->data.leaf.capt0.range.end = ctx->pos;
+        pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
     }
     return chunk;
 L0000:;
@@ -1794,6 +1871,13 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_expression(lc_context_t *ctx) {
     pcc_value_table__resize(ctx->auxil, &chunk->values, 1);
     pcc_capture_table__resize(ctx->auxil, &chunk->capts, 0);
     if (!pcc_apply_rule(ctx, pcc_evaluate_rule_logic, &chunk->thunks, &(chunk->values.buf[0]))) goto L0000;
+    {
+        pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_expression_0, 1, 0);
+        thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
+        thunk->data.leaf.capt0.range.start = chunk->pos;
+        thunk->data.leaf.capt0.range.end = ctx->pos;
+        pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+    }
     return chunk;
 L0000:;
     pcc_thunk_chunk__destroy(ctx->auxil, chunk);
@@ -2049,13 +2133,22 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_term(lc_context_t *ctx) {
         }
         if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0002;
         if (!pcc_apply_rule(ctx, pcc_evaluate_rule_factor, &chunk->thunks, &(chunk->values.buf[1]))) goto L0002;
+        {
+            pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_term_0, 3, 1);
+            thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
+            thunk->data.leaf.values.buf[1] = &(chunk->values.buf[1]);
+            thunk->data.leaf.capts.buf[0] = &(chunk->capts.buf[0]);
+            thunk->data.leaf.capt0.range.start = chunk->pos;
+            thunk->data.leaf.capt0.range.end = ctx->pos;
+            pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+        }
         goto L0001;
     L0002:;
         ctx->pos = p;
         pcc_thunk_array__revert(ctx->auxil, &chunk->thunks, n);
         if (!pcc_apply_rule(ctx, pcc_evaluate_rule_factor, &chunk->thunks, &(chunk->values.buf[2]))) goto L0006;
         {
-            pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_term_0, 3, 1);
+            pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_term_1, 3, 1);
             thunk->data.leaf.values.buf[2] = &(chunk->values.buf[2]);
             thunk->data.leaf.capt0.range.start = chunk->pos;
             thunk->data.leaf.capt0.range.end = ctx->pos;
@@ -3226,7 +3319,7 @@ lc_context_t *lc_create(parser_t*auxil) {
     return pcc_context__create(auxil);
 }
 
-int lc_parse(lc_context_t *ctx, ast_node_t *ret) {
+int lc_parse(lc_context_t *ctx, asn_t *ret) {
     pcc_thunk_array_t thunks;
     pcc_thunk_array__init(ctx->auxil, &thunks, PCC_ARRAYSIZE);
     if (pcc_apply_rule(ctx, pcc_evaluate_rule_statements, &thunks, ret))
@@ -3242,11 +3335,112 @@ void lc_destroy(lc_context_t *ctx) {
     pcc_context__destroy(ctx);
 }
 
-int main(int argc, const char* argv[]) {
-	parser_t p = { argc>1 ? fopen(argv[1], "r") : stdin, argc>1 ? argv[1] : "stdin" };
+int main(int argc, char** argv) {
+	static int c, verbose_flag;
+	output = stdin;
 
-    lc_context_t *ctx = lc_create(&p);
-    while (lc_parse(ctx, NULL));
-    lc_destroy(ctx);
+  while (1)    {
+      static struct option long_options[] =
+        {
+          /* These options set a flag. */
+          {"verbose", no_argument,       &verbose_flag, 1},
+          {"brief",   no_argument,       &verbose_flag, 0},
+          /* These options don’t set a flag.
+             We distinguish them by their indices. */
+          {"add",     no_argument,       0, 'a'},
+          {"append",  no_argument,       0, 'b'},
+          {"output",  required_argument, 0, 'o'},
+          {"create",  required_argument, 0, 'c'},
+          {"file",    required_argument, 0, 'f'},
+          {0, 0, 0, 0}
+        };
+      /* getopt_long stores the option index here. */
+      int option_index = 0;
+
+      c = getopt_long (argc, argv, "o:",
+                       long_options, &option_index);
+
+      /* Detect the end of the options. */
+      if (c == -1)
+        break;
+
+      switch (c)
+        {
+        case 0:
+          /* If this option set a flag, do nothing else now. */
+          if (long_options[option_index].flag != 0)
+            break;
+          printf ("option %s", long_options[option_index].name);
+          if (optarg)
+            printf (" with arg %s", optarg);
+          printf ("\n");
+          break;
+
+        case 'a':
+          puts ("option -a\n");
+          break;
+
+        case 'b':
+          puts ("option -b\n");
+          break;
+
+        case 'c':
+          printf ("option -c with value `%s'\n", optarg);
+          break;
+
+        case 'o':
+          output = fopen(optarg, "w+");
+          break;
+
+        case 'f':
+          printf ("option -f with value `%s'\n", optarg);
+          break;
+
+        case '?':
+          /* getopt_long already printed an error message. */
+          break;
+
+        default:
+          abort ();
+        }
+    }
+
+  /* Instead of reporting ‘--verbose’
+     and ‘--brief’ as they are encountered,
+     we report the final status resulting from them. */
+  if (verbose_flag)
+    puts ("verbose flag is set");
+
+  /* Print any remaining command line arguments (not options). */
+	//if (optind < argc)
+
+	parser_t ps[20];
+	int psi = 0;
+	while (optind < argc && psi<20){
+		const char * f = argv[optind++];
+		FILE * fd = fopen(f, "r");
+		if(!fd){
+			fprintf(stderr, "can't open input file: `%s`\n", f);
+		}else{
+			//printf ("translate file: %s\n", f);
+			ps[psi++] = (parser_t){ fd, f };
+		}
+		
+	}
+
+	OUT("int main(int argc, char** argv)\n{\n");
+
+	for(int i = 0; i<psi; i++){
+		printf ("translate file: %s\n", ps[i].file_name);
+		lc_context_t *ctx = lc_create(&(ps[i]));
+		while (lc_parse(ctx, NULL));
+		lc_destroy(ctx);
+	}
+
+	OUT("\nreturn 0;\n}\n");
+
+
+
+
     return 0;
 }

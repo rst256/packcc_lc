@@ -5,6 +5,9 @@
 
 char * strdup(const char *);
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <getopt.h>
 
 #include "ast.h"
 
@@ -16,7 +19,7 @@ extern "C" {
 typedef struct lc_context_tag lc_context_t;
 
 lc_context_t *lc_create(parser_t*auxil);
-int lc_parse(lc_context_t *ctx, ast_node_t *ret);
+int lc_parse(lc_context_t *ctx, asn_t *ret);
 void lc_destroy(lc_context_t *ctx);
 
 #ifdef __cplusplus

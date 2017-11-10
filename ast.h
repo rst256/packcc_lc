@@ -49,6 +49,7 @@ typedef struct ast_node {
 		struct ast_node_type node_type;
 	};
 			double number;
+			const char * str;
 	union {
 		union ast_expr {
 			// struct ast_value {
@@ -57,6 +58,7 @@ typedef struct ast_node {
 			int ident;
 			struct ast_expr_binop {
 				struct ast_node * larg;
+				char op;
 				struct ast_node * rarg;
 			};
 			struct ast_expr_unop {
@@ -66,6 +68,50 @@ typedef struct ast_node {
 	};
 } ast_node_t;
 
+typedef struct asn {
+	int type;
+	double number;
+	union {
+		int ident;
+		struct asn_expr_binop {
+			struct asn * larg;
+			char op;
+			struct asn * rarg;
+		};
+		struct asn_expr_unop {
+			struct asn * arg;
+		};
+	};
+
+			// const char * str;
+	// union {
+	// 	union ast_expr {
+	// 		// struct ast_value {
+	// 		// 
+	// 		// } ;
+	// 		int ident;
+	// 		struct asn_expr_binop {
+	// 			struct ast_node * larg;
+	// 			char op;
+	// 			struct ast_node * rarg;
+	// 		};
+	// 		struct asn_expr_unop {
+	// 			struct ast_node * arg;
+	// 		};
+	// 	};
+	// };
+} asn_t;
+
+typedef int (*asn_fprint)(ast_node_t * n, FILE* f);
+
+struct asn_mtd {
+	const char * name;
+	asn_fprint fprint;
+	// union {
+	// };
+};
+
+#define ASN(T, ST, SP) __.node_type = (ast_node_type_t){ AST_NODE_##T, AST_NODE_##T##_##ST, SP }
 
 ast_node_t * ast_binop_init(ast_node_t * node, ast_node_t *larg, int op, ast_node_t *rarg);
 
