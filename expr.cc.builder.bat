@@ -32,7 +32,8 @@ echo successful
 
 echo ----------- run lex1 ... ----------
 %ROOT%\expr.exe %ROOT%\expr-test.lc -o expr-test.c
-IF NOT %ERRORLEVEL% EQU 0 GOTO error_l
+IF %ERRORLEVEL% EQU 0 GOTO end_l
+%GDB% expr.exe  expr-test.lc
 echo --------- test successful ---------
 
 :: cmd.exe /k %ROOT%\calc.exe

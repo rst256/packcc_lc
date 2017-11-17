@@ -11,12 +11,21 @@
 
 //	include "ast.h"
 
+typedef struct position_tag {
+	int line, col;
+} position_t;
+
 typedef struct {
 	FILE* input;
 	const char * file_name;
-	// struct {
-	// 
-	// } ;
+	union {
+		struct position_tag;
+		struct position_tag begin_pos;
+	};
+	struct position_tag end_pos;
+	int lines_count;
+	int pos;
+	int lines[2048];
 } parser_t;
 
 #include "uthash.h"
@@ -149,12 +158,17 @@ void ident_free(idents_t **hash){
 
 
 enum asn_type {
-	expr_primary = 1,
+	expr_integer = 1,
 	expr_binop, expr_ident, expr_call, stat_assign, expr_field, expr_index, expr_string, expr_float, 
 };
 
 struct asn_shared {
-        int type;
+	int type:28, is_statement:1;
+	union {
+		struct position_tag;
+		struct position_tag begin_pos;
+	};
+	struct position_tag end_pos;
 };
 
 struct asn_expr_primary {
@@ -230,14 +244,31 @@ typedef struct asn_list {
 	int col = 1, line = 1; static line_begin_pos=0;
 	int pcc_getchar(parser_t* p){ 
 		int c = fgetc(p->input); 
+		p->pos += 1;
+		if(c=='\n'){ p->lines[p->lines_count++] = p->pos; }
 		return c; 
+	}
+
+	int get_line(parser_t* p, int pos){ 
+		if(p->pos < pos) return 0;
+		for(int i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) return i+1;
+		return p->lines_count+1; 
+	}
+
+	int get_col(parser_t* p, int pos){ 
+		if(p->pos < pos) return 0;
+		int i;
+		for(i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) break;
+		return ( i ? pos - p->lines[i-1] : pos ) + 1; 
 	}
 
     #define PCC_GETCHAR(auxil) pcc_getchar(auxil)
     #define PCC_BUFFERSIZE 1024
 
 	#define  _ERROR(F, L, C, FN, ...) { fprintf(stderr, "%s:%d:%d: {%s} ", F, L, C, FN); fprintf(stderr, __VA_ARGS__); exit(0); }
-	#define  ERROR(...) _ERROR(auxil->file_name, (_0s), (_0e), __FUNCTION__, __VA_ARGS__)
+	#define  ERROR(...) printf("%s:%d:%d: `%s`\n", auxil->file_name, get_line(auxil, _0e), get_col(auxil, _0e), _0/*, (_0s), (_0e)*/); update_position(_0, &(auxil->line), &(auxil->col)); _ERROR(auxil->file_name, auxil->line, auxil->col, __FUNCTION__, __VA_ARGS__)
+
+//# _ERROR(auxil, __FUNCTION__, __VA_ARGS__)
 
 	#define  _WARN(F, L, C, ...){ fprintf(stderr, "%s:%d:%d: ", F, L, C); fprintf(stderr, __VA_ARGS__); }
 	#define  WARN(...) _WARN(auxil->file_name, (_0s), (_0e), __VA_ARGS__)
@@ -250,13 +281,17 @@ typedef struct asn_list {
 		exit(1);
 	}
 
-    #define _NEW_ASN(TYPE, THIS) THIS = malloc(sizeof(asn_t)); THIS->type = TYPE;
-    #define NEW_ASN(TYPE) _NEW_ASN(TYPE, __)
+	#define _NEW_ASN(TYPE, THIS, SRC, CTX) \
+		THIS = malloc(sizeof(asn_t)); \
+		THIS->type = TYPE; THIS->is_statement = 0; \
+		THIS->line = CTX->line; THIS->col = CTX->col; \
+		update_position(SRC, &(THIS->line), &(THIS->col)); 
+	#define NEW_ASN(TYPE) _NEW_ASN(TYPE, __, _0, auxil)
 
 void print_asn(asn_t *n){
 	if(!n) return;
 	switch(n->type){
-		case expr_primary:
+		case expr_integer:
 			printf("%g", n->number);
 			break;
 		case expr_float:
@@ -283,14 +318,21 @@ void print_asn(asn_t *n){
 			printf(")"); 
 			break;
 		case stat_assign:
-			print_asn(n->lvalue); printf(" = "); print_asn(n->rvalue); printf(";"); 
+			print_asn(n->lvalue); printf(" = "); print_asn(n->rvalue);
 			break;
 		default:
 			printf("?[%d]?", n->type);
 		break;
 	}
+	if(n->is_statement) printf(";"); 
 }
 
+void update_position(const char *s, int *line, int *col){
+	for(char c; (c = *s++); ){
+		if(c=='\n'){ *line += 1; *col = 1; }
+		else if(c!='\r'){ *col += 1; }
+	}
+}
 
 }
 
@@ -298,13 +340,25 @@ void print_asn(asn_t *n){
 
 ########$ statement
 
+__statement <- 
+	( 	{ printf("%s:%d:%d:", auxil->file_name, get_line(auxil, _0e+1), get_col(auxil, _0e+1)); } e:_statement  {
+			print_asn(e); 
+			printf("\n"); 
+} )+
+
+_statement <- 
+	e:statement  _ ';' ~{ ERROR("`;` expected\n"); }   { $$ = e; $$->is_statement = 1; }
+	# / _ { $$ = NULL; }
+
+
 statement <- 
-	e:assign   { $$ = e; }
-	/ _ c:call _ ';'    { $$ = c; }
-	/ _ { $$ = NULL; }
+	e:assign  { $$ = e; }
+	/ _ c:call _ '{' _ '}'   { $$ = c; }
+	/ _ c:call    { $$ = c; }
+
 
 assign <-  
-	_ lv:lvalue _ < [-+*/|&%^]? > '=' _ rv:expression _ ';'  {  
+	_ lv:lvalue _ < [-+*/|&%^]? > '=' _ rv:expression  {  
 NEW_ASN(stat_assign); 
 $$->lvalue = lv;
 $$->rvalue = rv;
@@ -320,10 +374,10 @@ $$->rvalue = rv;
 ########$ expression 
 %source {
 
-asn_t * binop(asn_t * l, const char *op, asn_t * r){
-	asn_t * __;
-	if(l->type==expr_primary && r->type==expr_primary){
-		NEW_ASN(expr_primary); 
+asn_t * binop(asn_t * l, const char *op, asn_t * r, parser_t * auxil, const char* _0){
+	asn_t * __; //const char* _0 = "\0"; //parser_t * auxil = malloc(100);
+	if(l->type==expr_integer && r->type==expr_integer){
+		NEW_ASN(expr_integer); 
 		switch(op[0]){
 		  case '-': __->number = l->number - r->number; break;
 		  case '+': __->number = l->number + r->number; break;
@@ -335,7 +389,7 @@ asn_t * binop(asn_t * l, const char *op, asn_t * r){
 		}
 	}else{
 		NEW_ASN(expr_binop); 
-		$$->larg=l; $$->rarg=r; $$->op=op[0]; 
+		__->larg=l; __->rarg=r; __->op=op[0]; 
 	}
 	return __;
 }
@@ -343,24 +397,41 @@ asn_t * binop(asn_t * l, const char *op, asn_t * r){
 }
 
 expression <- 
-	e:term  { $$ = e; }
+	ee:assign { $$ = ee; }
+	/ e:term  { $$ = e; }
+
 
 term <- 
-	l:term _ < '+' / '-' > _ r:factor { $$ = binop(l, $1, r); }
+	l:term _ < '+' / '-' > _ r:factor ~{ ERROR("rarg expected. %s %d %d\n", $0, __pcc_ctx->pos, $0s); } { $$ = binop(l, $1, r, auxil, $0); }
 	/ e:factor                { $$ = e; }
 
 
 factor <- 
-	l:factor _ < '*' / '/' > _ r:primary { $$ = binop(l, $1, r); }
+	l:factor _ < '*' / '/' > _ r:primary { $$ = binop(l, $1, r, auxil, $0); }
 	/ e:primary                { $$ = e; }
 
 
 
 primary <- 
-	 '.' [0-9]+ ( 'e' [-+]? [0-9]+ )?               { NEW_ASN(expr_float); $$->float_num = atof($0); }
-	/ < [0-9]+ ( '.' [0-9]+ )? ( 'e' [-+]? [0-9]+ )? >               { NEW_ASN(expr_float); $$->float_num = atof($0); }
-	/ < [0-9]+ >               { NEW_ASN(expr_primary); $$->number = atoi($2); }
-	/ '"' < string > '"'  			{ printf("string: `%s`\n", $3); NEW_ASN(expr_string); $$->string = strdup($3);}
+	( '.' [0-9]+ ( 'e' [-+]? [0-9]+ )?   )            { NEW_ASN(expr_float); $$->float_num = atof($0); }
+	/ ( '0x' < [0-9a-fA-F]+ >  )            
+		{ 
+			NEW_ASN(expr_integer); 
+			char buff[128], c;
+			const char *s = $1; int i, r, rr = 1;
+			for(i = 0; (c = *s++); i++){
+				if(c>='0' && c<='9') buff[i] = c - '0';
+				else if(c>='a' && c<='f') buff[i] = 10 + c - 'a';
+				else if(c>='A' && c<='F') buff[i] = 10 + c - 'A';
+				//printf("%2d: %c %2d %2x\n", i, c, buff[i], buff[i]);
+			} //i--;
+			for(r = 0; --i >= 0;){ r += rr*buff[i]; rr *= 16; }
+			$$->number = r; 
+			// printf("hex: `%s` %x %d\n", $1, r, r); 
+		}
+	/ ([0-9]+ ( '.' [0-9]+ )? ( 'e' [-+]? [0-9]+ )?   )             { NEW_ASN(expr_float); $$->float_num = atof($0); }
+	/  ([0-9]+  )              { NEW_ASN(expr_integer); $$->number = atoi($0); }
+	/ '"' < string > '"'  			{ printf("string: `%s`\n", $2); NEW_ASN(expr_string); $$->string = strdup($2);}
 	# / string 		{ $$ = e; }
 	/ e:call 			{ $$ = e; }
 	/ e:lvalue   { $$ = e; }   
@@ -492,7 +563,7 @@ int main(int argc, char** argv) {
 			fprintf(stderr, "can't open input file: `%s`\n", f);
 		}else{
 			//printf ("translate file: %s\n", f);
-			ps[psi++] = (parser_t){ fd, f };
+			ps[psi++] = (parser_t){ fd, f, (struct position_tag){1, 1}, (struct position_tag){1, 1}, 0, 0 };
 		}
 		
 	}
@@ -504,8 +575,12 @@ int main(int argc, char** argv) {
 	for(int i = 0; i<psi; i++){
 		printf ("translate file: %s\n", ps[i].file_name);
 		expr_context_t *ctx = expr_create(&(ps[i]));
-		asn_t* n;
-		while (expr_parse(ctx, &n)){ print_asn(n); printf("\n"); }
+		asn_t* n;expr_parse(ctx, &n);
+/*		while (){ 
+			printf("%s:%d:%d:", ps[i].file_name, ps[i].line, ps[i].col);
+			print_asn(n); 
+			printf("\n"); 
+		}*/
 		expr_destroy(ctx);
 	}
 

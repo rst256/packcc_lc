@@ -11,12 +11,21 @@
 
 //	include "ast.h"
 
+typedef struct position_tag {
+        int line, col;
+} position_t;
+
 typedef struct {
         FILE* input;
         const char * file_name;
-        // struct {
-        // 
-        // } ;
+        union {
+                struct position_tag;
+                struct position_tag begin_pos;
+        };
+        struct position_tag end_pos;
+        int lines_count;
+        int pos;
+        int lines[2048];
 } parser_t;
 
 #include "uthash.h"
@@ -149,12 +158,17 @@ void ident_free(idents_t **hash){
 
 
 enum asn_type {
-        expr_primary = 1,
+        expr_integer = 1,
         expr_binop, expr_ident, expr_call, stat_assign, expr_field, expr_index, expr_string, expr_float, 
 };
 
 struct asn_shared {
-        int type;
+        int type:28, is_statement:1;
+        union {
+                struct position_tag;
+                struct position_tag begin_pos;
+        };
+        struct position_tag end_pos;
 };
 
 struct asn_expr_primary {
