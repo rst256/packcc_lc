@@ -8,6 +8,7 @@
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <getopt.h>
+	#include <malloc.h> 
 
 //	include "ast.h"
 
@@ -162,13 +163,18 @@ enum asn_type {
 	expr_binop, expr_ident, expr_call, stat_assign, expr_field, expr_index, expr_string, expr_float, 
 };
 
+typedef unsigned int parser_pos_t;
+
 struct asn_shared {
 	int type:28, is_statement:1;
 	union {
 		struct position_tag;
-		struct position_tag begin_pos;
+		//struct position_tag begin_pos;
 	};
-	struct position_tag end_pos;
+	//struct position_tag end_pos;
+	parser_pos_t begin_pos;
+	parser_pos_t end_pos;
+
 };
 
 struct asn_expr_primary {
@@ -240,10 +246,10 @@ typedef struct asn_list {
 
 %source {
 	static FILE* output;
-
 	int col = 1, line = 1; static line_begin_pos=0;
 	int pcc_getchar(parser_t* p){ 
-		int c = fgetc(p->input); 
+		int c;
+		while( (c = fgetc(p->input))=='\r' );
 		p->pos += 1;
 		if(c=='\n'){ p->lines[p->lines_count++] = p->pos; }
 		return c; 
@@ -265,8 +271,32 @@ typedef struct asn_list {
     #define PCC_GETCHAR(auxil) pcc_getchar(auxil)
     #define PCC_BUFFERSIZE 1024
 
-	#define  _ERROR(F, L, C, FN, ...) { fprintf(stderr, "%s:%d:%d: {%s} ", F, L, C, FN); fprintf(stderr, __VA_ARGS__); exit(0); }
-	#define  ERROR(...) printf("%s:%d:%d: `%s`\n", auxil->file_name, get_line(auxil, _0e), get_col(auxil, _0e), _0/*, (_0s), (_0e)*/); update_position(_0, &(auxil->line), &(auxil->col)); _ERROR(auxil->file_name, auxil->line, auxil->col, __FUNCTION__, __VA_ARGS__)
+
+	//#define DEBUG_ERROR_PREFIX( FN, LN, FL ) fprintf(stderr, "%s:%d: in `%s`:\n", FL, L, FN)
+
+	//#define  _ERROR(F, L, C, FN, ...) { fprintf(stderr, "%s:%d:%d: {%s} ", F, L, C, FN); fprintf(stderr, __VA_ARGS__); exit(0); }
+#define  _DEBUG_ERROR_PREFIX( AUX, S, E, C, FN, L, FL, ... ) \
+	( \
+		fprintf(stderr, "%s:%d:%d: Start ", AUX->file_name, get_line(AUX, S), get_col(AUX, S) ), \
+		fprintf(stderr, __VA_ARGS__), \
+		fprintf(stderr, "\n\t%s:%d:%d: Ends `%s`\n\t\t%s:%d: error in %s:\n", \
+				AUX->file_name, get_line(AUX, E), get_col(AUX, E), C, \
+				FL, L, FN \
+		) \
+	)
+	#define  DEBUG_ERROR_PREFIX( AUX, S, E, C, FN, L, ... ) \
+		_DEBUG_ERROR_PREFIX( AUX, S, E, C, FN, L, __VA_ARGS__, "Syntax error!")
+
+//	#define  UpperFilter(Parent, ...) Parent ( (__VA_ARGS__ , __LINE__) ) 
+
+
+	#define  _ERROR(AUX, PREF, ...) { DEBUG_ERROR_PREFIX(AUX, FL, L, FN); fprintf(stderr, __VA_ARGS__); exit(0); }
+	#define  ERROR(...)  exit( ( DEBUG_ERROR_PREFIX( auxil, _0s, _0e,  _0, __FUNCTION__, __LINE__, __FILE__, __VA_ARGS__) , 0 ) ) 
+
+	#define  EXPECT(...)   exit( ( DEBUG_ERROR_PREFIX( auxil, _0s, _0e,  _0, __FUNCTION__, __LINE__, __FILE__, #__VA_ARGS__ " expected"), 0 ) )
+		 //fprintf(stderr, "\t %s expected\n", #__VA_ARGS__); exit(0); }
+
+//printf("%s:%d:%d: `%s`\n", auxil->file_name, get_line(auxil, _0e), get_col(auxil, _0e), _0/*, (_0s), (_0e)*/); update_position(_0, &(auxil->line), &(auxil->col)); _ERROR(auxil->file_name, auxil->line, auxil->col, __FUNCTION__, __VA_ARGS__)
 
 //# _ERROR(auxil, __FUNCTION__, __VA_ARGS__)
 
@@ -287,6 +317,50 @@ typedef struct asn_list {
 		THIS->line = CTX->line; THIS->col = CTX->col; \
 		update_position(SRC, &(THIS->line), &(THIS->col)); 
 	#define NEW_ASN(TYPE) _NEW_ASN(TYPE, __, _0, auxil)
+
+#define _dump_asn(ASN, BUFF, SIZE, ...) __dump_asn(ASN, BUFF, SIZE)
+#define dump_asn(...) _dump_asn(__VA_ARGS__, alloca(2048), 2048)
+
+const char * __dump_asn(asn_t *n, char *buff, size_t size){
+	int shift;
+	if(!n) return "";
+	switch(n->type){
+		case expr_integer:
+			snprintf(buff, size, "%g", n->number);
+			break;
+		case expr_float:
+			shift = snprintf(buff, size, "%g", n->float_num);
+			break;
+		case expr_string:
+			shift = snprintf(buff, size, "\"%s\"", n->string);
+			break;
+		case expr_ident:
+			shift = snprintf(buff, size, "%s", ident_name(n->ident));
+			break;
+		case expr_field:
+			shift = snprintf(buff, size, "%s.%s", dump_asn(n->object), ident_name(n->field));
+			break;
+		case expr_index:
+			shift = snprintf(buff, size, "%s[%s]", dump_asn(n->array), dump_asn(n->index)); 
+			break;
+		case expr_binop:
+			shift = snprintf(buff, size, "(%s %c %s)", dump_asn(n->larg),  n->op, dump_asn(n->rarg));
+			break;
+		case expr_call:
+			shift = snprintf(buff, size, "%s()", dump_asn(n->func)); 
+			/*/for(int i = 0; i<n->args_count; i++){ print_asn(n->args[i]); if(i+1<n->args_count) shift = snprintf(buff, size, ", "); }
+			# shift = snprintf(buff, size, ")"); */
+			break;
+		case stat_assign:
+			shift = snprintf(buff, size, "%s = %s", dump_asn(n->lvalue), dump_asn(n->rvalue));
+			break;
+		default:
+			shift = snprintf(buff, size, "?[%d]?", n->type);
+		break;
+	}
+	if(n->is_statement) snprintf(buff+shift, size-shift, ";"); 
+	return buff;
+}
 
 void print_asn(asn_t *n){
 	if(!n) return;
@@ -340,34 +414,46 @@ void update_position(const char *s, int *line, int *col){
 
 ########$ statement
 
-__statement <- 
-	( 	{ printf("%s:%d:%d:", auxil->file_name, get_line(auxil, _0e+1), get_col(auxil, _0e+1)); } e:_statement  {
-			print_asn(e); 
-			printf("\n"); 
-} )+
+__statements <- 
+	__statement+
 
-_statement <- 
-	e:statement  _ ';' ~{ ERROR("`;` expected\n"); }   { $$ = e; $$->is_statement = 1; }
+ # { printf("%s:%d:%d:", auxil->file_name, get_line(auxil, _0e+1), get_col(auxil, _0e+1)); } 
+__statement <- 
+ 	e:statement  _
+		{
+				printf("%s:%d:%d:", auxil->file_name, get_line(auxil, _0s), get_col(auxil, _0s));
+				print_asn(e); 
+				printf("\n"); 
+		} 
+	/ ';' _
+
+
+# _statement <- 
+# 	e:statement  _ ';' ~{ EXPECT(`;`); }  _   { $$ = e; $$->is_statement = 1; }
 	# / _ { $$ = NULL; }
 
 
 statement <- 
 	e:assign  { $$ = e; }
-	/ _ c:call _ '{' _ '}'   { $$ = c; }
-	/ _ c:call    { $$ = c; }
+	/ c:call    { $$ = c; }
+	/ e:if_then    { $$ = e; }
+	/ e:if_then_else    { $$ = e; }
 
 
 assign <-  
-	_ lv:lvalue _ < [-+*/|&%^]? > '=' _ rv:expression  {  
-NEW_ASN(stat_assign); 
-$$->lvalue = lv;
-$$->rvalue = rv;
+	lv:lvalue _ < [-+*/|&%^] > '=' _ rv:expression  
+		{ NEW_ASN(stat_assign); $$->lvalue = lv; $$->rvalue = rv; }
+	/ lv:lvalue _ '=' _ rv:expression  
+		{ NEW_ASN(stat_assign); $$->lvalue = lv; $$->rvalue = rv; }
 
-//printf("assign: %s = ", $1);
 
-//printf(";\n");
-}
+if_then <-
+	'if' _ cond:expression _ 'then' _ __statements _ 'end'
+		{ $$ = cond; }
 
+if_then_else <-
+	'if' _ cond:expression _ 'then' _ __statements _ 'else' _ __statements _ 'end'
+		{ $$ = cond; }
 
 
 
@@ -398,16 +484,26 @@ asn_t * binop(asn_t * l, const char *op, asn_t * r, parser_t * auxil, const char
 
 expression <- 
 	ee:assign { $$ = ee; }
-	/ e:term  { $$ = e; }
+	/ e:logic                   { $$ = e; }
+
+
+logic <- 	
+	l:logic _ < '&&' / '||' / '^^' > _ r:compare   ~{ EXPECT(rarg); } { $$ = binop(l, $1, r, auxil, $0); }
+	/ e:compare                  { $$ = e; }
+
+
+compare <- 	
+	l:compare _ < '<' / '>' / '<=' / '>=' / '==' / '!=' > _ r:term   ~{ EXPECT(rarg); } { $$ = binop(l, $1, r, auxil, $0); }
+	/ e:term                  { $$ = e; }
 
 
 term <- 
-	l:term _ < '+' / '-' > _ r:factor ~{ ERROR("rarg expected. %s %d %d\n", $0, __pcc_ctx->pos, $0s); } { $$ = binop(l, $1, r, auxil, $0); }
+	l:term _ < '+' / '-' > _ r:factor ~{ EXPECT(rarg); } { $$ = binop(l, $1, r, auxil, $0); }
 	/ e:factor                { $$ = e; }
 
 
 factor <- 
-	l:factor _ < '*' / '/' > _ r:primary { $$ = binop(l, $1, r, auxil, $0); }
+	l:factor _ < '*' / '/' > _ r:primary ~{ ERROR("`%s` rarg expected", $1); }  { $$ = binop(l, $1, r, auxil, $0); }
 	/ e:primary                { $$ = e; }
 
 
@@ -431,7 +527,11 @@ primary <-
 		}
 	/ ([0-9]+ ( '.' [0-9]+ )? ( 'e' [-+]? [0-9]+ )?   )             { NEW_ASN(expr_float); $$->float_num = atof($0); }
 	/  ([0-9]+  )              { NEW_ASN(expr_integer); $$->number = atoi($0); }
-	/ '"' < string > '"'  			{ printf("string: `%s`\n", $2); NEW_ASN(expr_string); $$->string = strdup($2);}
+	/ '"' < string > '"'  			
+		{ /*printf("string: `%s`\n", $2); */
+			NEW_ASN(expr_string); 
+			$$->string = strdup($2);
+		}
 	# / string 		{ $$ = e; }
 	/ e:call 			{ $$ = e; }
 	/ e:lvalue   { $$ = e; }   
@@ -475,6 +575,9 @@ EOL <- '\n' { line++; line_begin_pos=$0e; }
 
 
 %%
+    //static pcc_value_t null = NULL;
+
+
 int main(int argc, char** argv) {
 	static int c, verbose_flag;
 	output = stdin;

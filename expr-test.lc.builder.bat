@@ -12,6 +12,7 @@ set ROOT=%CD%
 echo ----------- run lex1 ... ----------
 %ROOT%\expr.exe %ROOT%\expr-test.lc -o expr-test.c
 IF NOT %ERRORLEVEL% EQU 0 GOTO error_l
+echo ''
 echo --------- test successful ---------
 
 :: cmd.exe /k %ROOT%\calc.exe

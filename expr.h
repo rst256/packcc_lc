@@ -8,6 +8,7 @@
         #include <stdio.h>
         #include <stdlib.h>
         #include <getopt.h>
+        #include <malloc.h> 
 
 //	include "ast.h"
 
@@ -162,13 +163,18 @@ enum asn_type {
         expr_binop, expr_ident, expr_call, stat_assign, expr_field, expr_index, expr_string, expr_float, 
 };
 
+typedef unsigned int parser_pos_t;
+
 struct asn_shared {
         int type:28, is_statement:1;
         union {
                 struct position_tag;
-                struct position_tag begin_pos;
+                //struct position_tag begin_pos;
         };
-        struct position_tag end_pos;
+        //struct position_tag end_pos;
+        parser_pos_t begin_pos;
+        parser_pos_t end_pos;
+
 };
 
 struct asn_expr_primary {
