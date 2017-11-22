@@ -1,0 +1,19 @@
+const long: x=5
+short: vvv
+vvv=6 x=666*3+0 @ @ @ x=-666
+do
+	vvv=6 x=666*3+0
+	int: vvv
+	do
+		char **:vvv
+		if x&0x0F || !y then 
+			print(--x) 
+			x=0 
+			if x=y>=0 then t=print(y) else x=999 end
+		end
+	end
+end
+@u=u(66, uu())
+int: i = 666
+const char const *: str = "str value"
+int [50] *: int50_ptr

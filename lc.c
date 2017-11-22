@@ -48,6 +48,8 @@ static size_t strnlen(const char *str, size_t maxlen) {
 
 #define PCC_FREE(auxil, ptr)
 
+typedef char lc_char_t;
+
 #ifndef PCC_BUFFERSIZE
 #define PCC_BUFFERSIZE 256
 #endif /* PCC_BUFFERSIZE */

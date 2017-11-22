@@ -2604,7 +2604,13 @@ static bool_t generate(context_t *ctx) {
     bool_t ap = is_pointer_type(at);
     FILE *stream = ctx->sfile;
     {
-        fputs(
+        fprintf(
+            stream,
+            "typedef char %s_char_t;\n"
+            "\n",
+            get_prefix(ctx)
+        );
+      fputs(
             "#ifndef PCC_BUFFERSIZE\n"
             "#define PCC_BUFFERSIZE 256\n"
             "#endif /* PCC_BUFFERSIZE */\n"

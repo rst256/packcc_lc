@@ -3,13 +3,36 @@
 #ifndef PCC_INCLUDED__LC_LUA_H
 #define PCC_INCLUDED__LC_LUA_H
 
-char * strdup(const char *);
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <getopt.h>
+    char * strdup(const char *);
+    #include <string.h>
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include <getopt.h>
 
-#include "ast.h"
+    #include "scope.h"
+
+    typedef struct {
+            lua_State* L;
+            FILE* input;
+            const char * file_name;
+            int lines_count;
+            int pos;
+            int level;
+            int ctx;
+            scope_t* scope;
+            idents_t* idents;
+            int lines[2048];
+    } parser_t;
+    //# include "ast.h"
+    int pcc_getchar(parser_t* p){ 
+            int c;
+            while( (c = fgetc(p->input))=='\r' );
+            p->pos += 1;
+            if(c=='\n'){ p->lines[p->lines_count++] = p->pos; }
+            return c; 
+    }
+
+#define PCC_GETCHAR(auxil) pcc_getchar(auxil)
 
 
 #ifdef __cplusplus
@@ -19,7 +42,7 @@ extern "C" {
 typedef struct lc_context_tag lc_context_t;
 
 lc_context_t *lc_create(parser_t*auxil);
-int lc_parse(lc_context_t *ctx, ast_node_t *ret);
+int lc_parse(lc_context_t *ctx, int *ret);
 void lc_destroy(lc_context_t *ctx);
 
 #ifdef __cplusplus

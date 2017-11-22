@@ -209,9 +209,11 @@ typedef struct context_tag {
     char *iname;
     char *sname;
     char *hname;
+    char *lname;
     FILE *ifile;
     FILE *sfile;
     FILE *hfile;
+    FILE *lfile;
     char *hid;
     char *vtype;
     char *atype;
@@ -483,6 +485,20 @@ static void write_text(FILE *stream, const char *ptr, size_t len) {
         }
     }
 }
+static void write_code_block2(FILE *stream, const char *ptr, size_t len, int indent) {
+    size_t i;
+	fputc('\"', stream);
+    for (i = 0; i < len; i++) {
+       switch (ptr[i]){
+         case '\"': fputc('\\', stream); fputc(ptr[i], stream); break;
+         case '\\': fputc('\\', stream); fputc(ptr[i], stream); break;
+         case '\n': fputc('\"', stream); fputc(ptr[i], stream); fputc('\"', stream);  break;
+         default: fputc(ptr[i], stream); break;
+       }
+		
+    }
+	fputc('\"', stream);
+}
 
 static void write_code_block(FILE *stream, const char *ptr, size_t len, int indent) {
     size_t i;
@@ -714,9 +730,12 @@ static context_t *create_context(const char *iname, const char *oname, bool_t de
     ctx->iname = strdup_e((iname && iname[0]) ? iname : "-");
     ctx->sname = (oname && oname[0]) ? add_fileext(oname, "c") : replace_fileext(ctx->iname, "c");
     ctx->hname = (oname && oname[0]) ? add_fileext(oname, "h") : replace_fileext(ctx->iname, "h");
+    ctx->lname = (oname && oname[0]) ? add_fileext(oname, "lua") : replace_fileext(ctx->iname, "lua");
+
     ctx->ifile = (iname && iname[0]) ? fopen_rb_e(ctx->iname) : stdin;
     ctx->sfile = fopen_wt_e(ctx->sname);
     ctx->hfile = fopen_wt_e(ctx->hname);
+    ctx->lfile = fopen_wt_e(ctx->lname);
     ctx->hid = strdup_e(ctx->hname); make_header_identifier(ctx->hid);
     ctx->vtype = NULL;
     ctx->atype = NULL;
@@ -3556,6 +3575,70 @@ static bool_t generate(context_t *ctx) {
             "\n",
             stream
         );
+			{
+           // fprintf(
+           //     stream,
+           //     "static void %s_loadcodes(lua_State *L) {\nconst char *src = \n",
+           //     get_prefix(ctx)
+           // );
+            int i, j, k;
+ 				FILE *lstream = ctx->lfile;
+           for (i = 0; i < ctx->rules.len; i++) {
+                const node_rule_t *r = &ctx->rules.buf[i]->data.rule;
+                for (j = 0; j < r->codes.len; j++) {
+                    const char *s;
+                    int d;
+                    const node_const_array_t *v, *c;
+                    switch (r->codes.buf[j]->type) {
+                    case NODE_ACTION:
+                        s = r->codes.buf[j]->data.action.value;
+                        d = r->codes.buf[j]->data.action.index;
+                        v = &r->codes.buf[j]->data.action.vars;
+                        c = &r->codes.buf[j]->data.action.capts;
+                        break;
+                    case NODE_ERROR:
+                        s = r->codes.buf[j]->data.error.value;
+                        d = r->codes.buf[j]->data.error.index;
+                        v = &r->codes.buf[j]->data.error.vars;
+                        c = &r->codes.buf[j]->data.error.capts;
+                        break;
+                    default:
+                        print_error("Internal error [%d]\n", __LINE__);
+                        exit(-1);
+                    }
+
+//                     fprintf(
+//                         stream,
+//                         "\"function pcc_action_%s_%d(self, auxil, capture, vars)\\n\"\n"
+//                         "\"	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })\\n\"\n",
+//                         r->name, d, get_prefix(ctx)
+//                     );
+// 							write_code_block2(stream, s, strlen(s), 4);
+//                     fputs(
+//                         "\"\\nend\\n\"\n",
+//                         stream
+//                     );
+                    fprintf(
+                        lstream,
+                        "function pcc_action_%s_%d(self, auxil, capture, vars)\n"
+                        "	 local _ENV = setmetatable({ vars=vars}, {__index=function(s,k) return rawget(_G, k) or rawget(vars, k) or rawget(capture, k) end })\n",
+                        r->name, d, get_prefix(ctx)
+                    );
+							write_code_block(lstream, s, strlen(s), 4);
+                    fputs(
+                        "\nend\n\n",
+                        lstream
+                    );
+					}
+				}
+ //                         "	 _ENV = setmetatable(_ENV, {__index=setmetatable({ vars=vars},  {__index= function(s,k) return rawget(vars, k) or rawget(capture, k) end }) })\n",				
+fclose(lstream);
+           // fputs(
+           //     ";\n"
+           //     "luaL_dostring(L, src);\n}\n",
+           //     stream
+           // );
+			}
         {
             int i, j, k;
             for (i = 0; i < ctx->rules.len; i++) {
@@ -3587,7 +3670,7 @@ static bool_t generate(context_t *ctx) {
                         r->name, d, get_prefix(ctx)
                     );
                     fputs(
-                        "lua_State *L = (__pcc_ctx->auxil);\n"
+                        "lua_State *L = (__pcc_ctx->auxil->L);\n"
                         "lua_newtable(L);\n"
                         "#define __ (*__pcc_out)\n",
                         stream
@@ -3630,14 +3713,79 @@ static bool_t generate(context_t *ctx) {
                     }
                      fprintf(
 								stream,
-								"lua_getglobal(L, \"%s_%d\");                  /* function to be called */"
-								"lua_pushstring(L, _0);                       /* 1st argument */"
-								"//lua_getglobal(L, \"t\");                    /* table to be indexed */"
-								"//lua_getfield(L, -1, \"x\");        /* push result of t.x (2nd arg) */"
-								"//lua_remove(L, -2);                  /* remove 't' from the stack */"
-								"//lua_pushinteger(L, 14);                          /* 3rd argument */"
-								"lua_call(L, 1, 0);     /* call 'f' with 3 arguments and 1 result */"
-								"//lua_setglobal(L, \"a\");",
+								"if( lua_getglobal(L, \"pcc_action_%s_%d\") == LUA_TFUNCTION ){\n"
+								"lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));\n"
+								"createCmptObject(L, __pcc_ctx->auxil);\n"
+								/*"lua_rawgeti(L, LUA_REGISTRYINDEX, (__pcc_ctx->auxil->ctx));\n"*/
+								"lua_newtable(L);\n",
+								r->name, d
+							); int 
+                   fprintf(
+                      stream,
+"lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));\n"
+                      "lua_setfield(L, -2, \"_0\"); \n"
+     //                 "lua_seti(L, -2, 0); \n"
+						);
+                  fprintf(
+                      stream,
+                      "lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);\n"
+                      "lua_setfield(L, -2, \"_0s\"); \n"
+                  );
+                  fprintf(
+                      stream,
+                      "lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);\n"
+                      "lua_setfield(L, -2, \"_0e\"); \n"
+                  );
+                   for (k = 0; k < c->len; k++) {
+                        assert(c->buf[k]->type == NODE_CAPTURE);
+                        fprintf(
+                            stream,
+"lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[%d]));\n"
+                      "lua_setfield(L, -2, \"_%d\"); \n",
+                          //  "lua_seti(L, -2, %d); \n",
+                            c->buf[k]->data.capture.index,
+                            c->buf[k]->data.capture.index + 1
+                        );
+                        fprintf(
+                            stream,
+                            "lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[%d]->range.start);\n"
+                            "lua_setfield(L, -2, \"_%ds\"); \n",
+                            c->buf[k]->data.capture.index,
+                            c->buf[k]->data.capture.index + 1
+                        );
+                        fprintf(
+                            stream,
+                            "lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[%d]->range.end);\n"
+                            "lua_setfield(L, -2, \"_%de\"); \n",
+                            c->buf[k]->data.capture.index,
+                            c->buf[k]->data.capture.index + 1
+                        );
+                    }
+
+                    fputs(
+								"lua_newtable(L);\n",
+                        stream
+                    );
+
+                    for (k = 0; k < v->len; k++) {
+                        assert(v->buf[k]->type == NODE_REFERENCE);
+                        fprintf(
+                            stream,
+ "lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[%d]));\n"
+                      "lua_setfield(L, -2, \"%s\"); \n",
+                            v->buf[k]->data.reference.index,
+                            v->buf[k]->data.reference.var
+                        );
+                    }
+
+                     fprintf(
+								stream,
+								"lua_call(L, 4, 1);    \n "
+								"if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);\n"
+								"}else{\n"
+								"printf(\"`pcc_action_%s_%d` is not a function\\n\");\n "
+								"}\n"
+								"\n",
 								r->name, d
 							);
 

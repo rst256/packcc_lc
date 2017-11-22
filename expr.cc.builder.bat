@@ -24,9 +24,9 @@ echo successful
 echo ----------- Compiling ... ----------
 
 :: %CC% %ROOT%\calc.c -o %ROOT%\calc.exe
-:: IF NOT %ERRORLEVEL% EQU 0 GOTO end_l
+:: IF NOT %ERRORLEVEL% EQU 0 GOTO end_l-Wno-unused-function
 
-%CC% -Wno-unused-function -Wall -Wno-implicit-int %ROOT%\expr.c %ROOT%\ast.c -o %ROOT%\expr.exe
+%CC%  -Wno-implicit-int -Wfatal-errors -Wall %ROOT%\expr.c %ROOT%\ident.c %ROOT%\scope.c %ROOT%\ast.c -o %ROOT%\expr.exe
 IF NOT %ERRORLEVEL% EQU 0 GOTO error_l
 echo successful
 

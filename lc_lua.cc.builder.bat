@@ -7,8 +7,6 @@ set GDB=c:\TDM-GCC-32\bin\gdb32.exe  -ex run
 %~d3
 CD %3
 
-%CC% %CD%\packcc_lua.c  -g3 -std=gnu99 -Bstatic -IC:\Projects\Lua\cmodules\lua53\src    -IC:\Projects\Lua\cmodules     -o packcc_lua.exe C:\Projects\Lua\cmodules\lua53\src\lua53.dll
-
 
 echo ---------- Generating ... ----------
 packcc_lua -o lc_lua  %CD%\lc_lua.cc 
@@ -19,4 +17,4 @@ echo ---------- Compiling ... ----------
 %CC% %CD%\lc_lua.c  %CD%\ident.c %CD%\scope.c  -g3 -std=gnu99 -Bstatic -IC:\Projects\Lua\cmodules\lua53\src    -IC:\Projects\Lua\cmodules     -o lc_lua.exe C:\Projects\Lua\cmodules\lua53\src\lua53.dll
 
 echo ----------- Runing ... ------------
-%CD%\lc_lua.exe %CD%\lc_lua-test.lc  -i %CD%\lc_lua_h.lua -o lc_lua-test.c
+%CD%\lc_lua.exe %CD%\lc_lua-test.lc -i %CD%\lc_lua_h.lua -o lc_lua-test.c
