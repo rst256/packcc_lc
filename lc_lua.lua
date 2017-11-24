@@ -61,9 +61,6 @@ end
 function pcc_action_assign_1(self, auxil, capture, vars)
 	 local _ENV = setmetatable({ vars=vars}, {__index=function(s,k) return rawget(_G, k) or rawget(vars, k) or rawget(capture, k) end })
     self = assign(var, value) 
-    --if not auxil:scope_find(var) then 
-    --print(auxil:pos(_0s), "undefined: ", var) 
-    -- end
     return self 
 
 end
@@ -76,8 +73,8 @@ end
 
 function pcc_action_define_1(self, auxil, capture, vars)
 	 local _ENV = setmetatable({ vars=vars}, {__index=function(s,k) return rawget(_G, k) or rawget(vars, k) or rawget(capture, k) end })
-    self = define(te, _1, value) 
-    if not auxil:scope_add(_1, te) then 
+    self = define(e, _1, value) 
+    if not auxil:scope_add(_1, e) then 
             print(auxil:pos(_0s), "redefine: ", _1, auxil:scope_find(_1)) 
     end
     return self 
@@ -246,8 +243,7 @@ end
 
 function pcc_action_lvalue_2(self, auxil, capture, vars)
 	 local _ENV = setmetatable({ vars=vars}, {__index=function(s,k) return rawget(_G, k) or rawget(vars, k) or rawget(capture, k) end })
-    --print(_0, auxil:get_ident(_0), auxil:scope_find(_0)) 
-    return _0--{ type='ident', name=_0 } 
+    return auxil:get_ident(_0)--{ type='ident', name=_0 } 
 
 end
 
@@ -259,31 +255,63 @@ end
 
 function pcc_action_type_expr_0(self, auxil, capture, vars)
 	 local _ENV = setmetatable({ vars=vars}, {__index=function(s,k) return rawget(_G, k) or rawget(vars, k) or rawget(capture, k) end })
-    return te_pointer(te) 
+    e.qualifier='const' return e 
 
 end
 
 function pcc_action_type_expr_1(self, auxil, capture, vars)
 	 local _ENV = setmetatable({ vars=vars}, {__index=function(s,k) return rawget(_G, k) or rawget(vars, k) or rawget(capture, k) end })
-    return te_pointer(te, 'const') 
+    return te_pointer(e) 
 
 end
 
 function pcc_action_type_expr_2(self, auxil, capture, vars)
 	 local _ENV = setmetatable({ vars=vars}, {__index=function(s,k) return rawget(_G, k) or rawget(vars, k) or rawget(capture, k) end })
-    return te_array(te, dim) 
+    return te_array(e, dim) 
 
 end
 
 function pcc_action_type_expr_3(self, auxil, capture, vars)
 	 local _ENV = setmetatable({ vars=vars}, {__index=function(s,k) return rawget(_G, k) or rawget(vars, k) or rawget(capture, k) end })
-    return te_primary(te, 'const') 
+    return e 
 
 end
 
-function pcc_action_type_expr_4(self, auxil, capture, vars)
+function pcc_action_type_primary_0(self, auxil, capture, vars)
 	 local _ENV = setmetatable({ vars=vars}, {__index=function(s,k) return rawget(_G, k) or rawget(vars, k) or rawget(capture, k) end })
-    return te_primary(_0) 
+    local sym = AUXIL:scope_find(_1)
+    if sym then 
+            print(auxil:pos(_1s), "VAR: `"..tostring(_1)..'`', sym, sym()) 
+    end
+    return te.primary(_1, 'const') 
+
+end
+
+function pcc_action_type_primary_1(self, auxil, capture, vars)
+	 local _ENV = setmetatable({ vars=vars}, {__index=function(s,k) return rawget(_G, k) or rawget(vars, k) or rawget(capture, k) end })
+    local sym = AUXIL:scope_find(_0)
+    if sym then 
+            print(auxil:pos(_0s), "VAR: `"..tostring(_0)..'`', sym, sym()) 
+    end
+    return te.primary(_0) 
+
+end
+
+function pcc_action_base_type_expr_0(self, auxil, capture, vars)
+	 local _ENV = setmetatable({ vars=vars}, {__index=function(s,k) return rawget(_G, k) or rawget(vars, k) or rawget(capture, k) end })
+    return te.primary(e, 'const') 
+
+end
+
+function pcc_action_base_type_expr_1(self, auxil, capture, vars)
+	 local _ENV = setmetatable({ vars=vars}, {__index=function(s,k) return rawget(_G, k) or rawget(vars, k) or rawget(capture, k) end })
+    return te.primary(_0) 
+
+end
+
+function pcc_action_base_type_expr_2(self, auxil, capture, vars)
+	 local _ENV = setmetatable({ vars=vars}, {__index=function(s,k) return rawget(_G, k) or rawget(vars, k) or rawget(capture, k) end })
+    return e 
 
 end
 

@@ -40,6 +40,66 @@
 %source {
 	static FILE* output;
 
+
+
+
+
+
+#define CMPT_IDENT_TNAME "parser_ident"
+
+static int createCmptIdent(lua_State *L, ident_t* id){
+	ident_t** obj = lua_newuserdata(L, sizeof(ident_t*));
+	if (obj == NULL) 
+		luaL_error(L, "can't allocate memory for userdata '%s'", CMPT_IDENT_TNAME);
+	*obj = id; 
+	luaL_setmetatable(L, CMPT_IDENT_TNAME);
+	return 1;
+}
+
+static int CmptIdent___tostring(lua_State *L){
+	ident_t** id = luaL_checkudata(L, 1, CMPT_IDENT_TNAME);
+	if (!id || !(*id)) 
+		luaL_error(L, "userdata '%s' object has been freed", CMPT_IDENT_TNAME);
+	lua_pushstring(L, ident_name(*id));
+	return 1;
+}
+
+
+
+
+
+
+#define CMPT_SYMBOL_TNAME "parser_symbol"
+
+static int createCmptSymbol(lua_State *L, symbol_t* id){
+	symbol_t** obj = lua_newuserdata(L, sizeof(symbol_t*));
+	if (obj == NULL) 
+		luaL_error(L, "can't allocate memory for userdata '%s'", CMPT_SYMBOL_TNAME);
+	*obj = id; 
+	luaL_setmetatable(L, CMPT_SYMBOL_TNAME);
+	return 1;
+}
+
+static int CmptSymbol___tostring(lua_State *L){
+	symbol_t** self = luaL_checkudata(L, 1, CMPT_SYMBOL_TNAME);
+	if (!self || !(*self)) 
+		luaL_error(L, "userdata '%s' object has been freed", CMPT_SYMBOL_TNAME);
+	lua_pushstring(L, symbol_name(*self));
+	return 1;
+}
+
+static int CmptSymbol___call(lua_State *L){
+	symbol_t** self = luaL_checkudata(L, 1, CMPT_SYMBOL_TNAME);
+	if (!self || !(*self)) 
+		luaL_error(L, "userdata '%s' object has been freed", CMPT_SYMBOL_TNAME);
+		lua_rawgeti(L, LUA_REGISTRYINDEX, symbol_data(*self));
+	return 1;
+}
+
+
+
+
+
 #define CMPT_OBJECT_TNAME "parser_auxil"
 static parser_t**  check_auxil(lua_State *L, int i){
 	parser_t** ts = luaL_checkudata(L, i, CMPT_OBJECT_TNAME);
@@ -121,7 +181,8 @@ static int CmptObject_get_ctx(lua_State *L){
 
 static int CmptObject_get_ident(lua_State *L){
 	parser_t* p = *check_auxil(L, 1);
-	lua_pushlightuserdata(L, ident_add(p->idents, luaL_checkstring(L, 2)));
+	//lua_pushlightuserdata(L, ident_add(p->idents, luaL_checkstring(L, 2)));
+	createCmptIdent(L, ident_add(p->idents, luaL_checkstring(L, 2)));
 	return 1;
 }
 
@@ -142,10 +203,11 @@ static int CmptObject_scope_up(lua_State *L){
 static int CmptObject_scope_find(lua_State *L){
 	parser_t* p = *check_auxil(L, 1);
 	symbol_t* sym = scope_find(p->scope, 
-		( lua_type(L, 2)==LUA_TLIGHTUSERDATA ? 
-			lua_touserdata(L, 2) : ident_add(p->idents, luaL_checkstring(L, 2)) ));
+		( lua_type(L, 2)==LUA_TUSERDATA ? 
+			*(ident_t**)lua_touserdata(L, 2) : ident_add(p->idents, luaL_checkstring(L, 2)) ));
 	if(sym) 
-		lua_rawgeti(L, LUA_REGISTRYINDEX, symbol_data(sym)); 
+		createCmptSymbol(L, sym);
+		// lua_rawgeti(L, LUA_REGISTRYINDEX, symbol_data(sym)); 
 	else 
 		lua_pushnil(L);
 	return 1;
@@ -154,11 +216,15 @@ static int CmptObject_scope_find(lua_State *L){
 static int CmptObject_scope_add(lua_State *L){
 	parser_t* p = *check_auxil(L, 1);
 	symbol_t* sym = scope_define(p->scope, 
-		( lua_type(L, 2)==LUA_TLIGHTUSERDATA ? 
-			lua_touserdata(L, 2) : ident_add(p->idents, luaL_checkstring(L, 2)) ),
+		( lua_type(L, 2)==LUA_TUSERDATA ? 
+			*(ident_t**)lua_touserdata(L, 2) : ident_add(p->idents, luaL_checkstring(L, 2)) ),
 		luaL_ref(L, LUA_REGISTRYINDEX)
 	);
-	lua_pushboolean(L, sym!=NULL);
+	if(sym) 
+		createCmptSymbol(L, sym);
+	else 
+		lua_pushnil(L);
+	// lua_pushboolean(L, sym!=NULL);
 	return 1;
 }
 
@@ -205,16 +271,13 @@ assign <-
 	var:lvalue _ '=' _ 
 		value:expression ~{ print('error expr') } _ { 
 self = assign(var, value) 
---if not auxil:scope_find(var) then 
---print(auxil:pos(_0s), "undefined: ", var) 
--- end
 return self }
 
 define <-  
-	te:type_expr _ ':' _ < ident > _ ( '=' _ 
+	e:type_expr _ ':' _ < ident > _ ( '=' _ 
 		value:expression ~{ print('error expr') } _ )? { 
-self = define(te, $1, value) 
-if not auxil:scope_add($1, te) then 
+self = define(e, $1, value) 
+if not auxil:scope_add($1, e) then 
 	print(auxil:pos(_0s), "redefine: ", $1, auxil:scope_find($1)) 
 end
 return self }
@@ -248,7 +311,7 @@ term <-
 
 
 factor <- 
-	larg:factor _ < '*' / '/' / '%' > _ rarg:primary  { return binop(larg, $1, rarg) }
+	larg:factor _ < '*' / '/' / '%' > _ rarg:unop  { return binop(larg, $1, rarg) }
 	/ e:unop                { return e }
 
 
@@ -290,26 +353,44 @@ lvalue <-
 	obj:lvalue _ '.' _ < ident > {  }
 	/ obj:lvalue _ '[' _ e:expression _ ']' {  }
 	/ ident  { 
---print($0, auxil:get_ident($0), auxil:scope_find($0)) 
-return $0--{ type='ident', name=$0 } }
+return auxil:get_ident($0)--{ type='ident', name=$0 } }
 	/ '@' _ obj:lvalue { return unop('@', obj)  }
 
 
 type_expr <-
-	te:type_expr _ '*' { return te_pointer(te) }
-	/ te:type_expr _ 'const' _ '*' { return te_pointer(te, 'const') }
-	/ te:type_expr _ '[' _ dim:expression _ ']' { return te_array(te, dim) }
-	/ 'const' _ te:type_expr  { return te_primary(te, 'const') }
-	/ ident  { return te_primary($0) }
+	e:type_expr _ 'const'  { e.qualifier='const' return e }
+	/ e:type_expr _ '*' { return te_pointer(e) }
+	/ e:type_expr _ '[' _ dim:expression _ ']' { return te_array(e, dim) }
+	/ e:type_primary  { return e }
+
+type_primary <-
+	'const' _ < ident > { local sym = AUXIL:scope_find($1)
+if sym then 
+	print(auxil:pos(_1s), "VAR: `"..tostring($1)..'`', sym, sym()) 
+end
+return te.primary($1, 'const') }
+	/ ident  { local sym = AUXIL:scope_find($0)
+if sym then 
+	print(auxil:pos(_0s), "VAR: `"..tostring($0)..'`', sym, sym()) 
+end
+return te.primary($0) }
 
 
-# primary_types <-
-# 	'struct' _ < ident > _ '{' _ '}' { return type_expr($1) }
-# 	/ 'struct' _ '{' _ '}'  { return type_expr('struct') }
-# 	/ 'struct' _ < ident >  { return type_expr($2) }
-# 	/ ident  { return type_expr($0) }
-# 	/ '(' _ te:type_expr _ ')' { return te }
-# 	
+base_type_expr <-
+	# 'struct' _ < ident > _ '{' _ '}' { return type_expr($1) }
+	# / 'struct' _ '{' _ '}'  { return type_expr('struct') }
+	# / 'struct' _ < ident >  { return type_expr($2) }
+	'const' _ e:base_type_expr  { return te.primary(e, 'const') }
+	/ ident  { return te.primary($0) }
+	/ '(' _ e:type_expr _ ')' { return e }
+	
+
+# access_modifiers <-
+# 	'public'
+# 	/ 'private'  
+# 	/ 'protected'
+
+
 
 _      <- [ \t\r\n]*
 
@@ -425,7 +506,39 @@ int main(int argc, char** argv) {
 	);
 
 	LuaM_userdata_register_class(L, CMPT_OBJECT_TNAME, LuaLexer__fn, LuaLexer__mt);
-			if(include_file){ printf ("include file: %s\n", include_file); luaL_dofile(L, include_file);}
+
+
+   static luaL_Reg LuaIdent__fn[] = { NULL, NULL };
+// newluaL_Reg(CmptObject_,
+//    	clone, pos, get_line, get_col, get_file, get_ctx, get_ident, get_level,
+//    );
+	static luaL_Reg LuaIdent__mt[]= newluaL_Reg(CmptIdent_,
+		__tostring
+	);
+
+	LuaM_userdata_register_class(L, CMPT_IDENT_TNAME, LuaIdent__fn, LuaIdent__mt);
+
+
+
+   static luaL_Reg LuaSymbol__fn[] = { NULL, NULL };
+	static luaL_Reg LuaSymbol__mt[]= newluaL_Reg(CmptSymbol_,
+		__tostring, __call
+	);
+
+	LuaM_userdata_register_class(L, CMPT_SYMBOL_TNAME, LuaSymbol__fn, LuaSymbol__mt);
+
+
+
+	createCmptObject(L, &(ps[psi-1]));
+	lua_setglobal(L, "AUXIL");
+
+			if(include_file){ 
+				printf ("include file: %s\n", include_file); 
+				if(luaL_dofile(L, include_file)){
+					fprintf(stderr, "C:\\lib\\packcc\\%s\n", luaL_checkstring(L, -1));
+					exit(0);
+				}
+			}
 			luaL_dofile(L, "C:\\lib\\packcc\\lc_lua.lua");
 
 		}

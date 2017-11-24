@@ -43,6 +43,7 @@ scope_iter_t scope_iter_clone(scope_iter_t from, scope_iter_t to){
 	i->readonly = from->readonly;
 	return i;
 }
+
 void scope_iter_next(scope_iter_t i){
 	if(i->symbol) i->symbol = i->symbol->hh.next;
 	if(!i->symbol){
@@ -106,8 +107,13 @@ scope_t* new_scope(scope_t *up){
 	}
 	return sc;
 }
-
-scope_t* scope_parent(scope_t *s){ return s->up; }
+// typedef const char* S;
+scope_t* scope_parent(scope_t *s){ 
+// 	S const str="123";
+// str=NULL;
+// str[1]='t';
+	return s->up; 
+}
 
 scope_t* scope_child(scope_t *parent, scope_priv_t data){
 	// NOT_NULL(parent);

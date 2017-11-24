@@ -1,3 +1,12 @@
+package.path = [[?.lua;?\init.lua;]]..package.path
+te = require'ast_lua.te'
+
+-- print('AUXIL', AUXIL)
+AUXIL:scope_add("int", { is_type=true })
+AUXIL:scope_add("short", { is_type=true })
+AUXIL:scope_add("long", { is_type=true })
+AUXIL:scope_add("char", { is_type=true })
+
 function printf(fmt, ...)
 	io.write(fmt:format(...))
 end
@@ -11,11 +20,11 @@ end
 te_primary_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
 te_pointer_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
 te_array_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
-te__mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
-binop_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
-unop_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
-call_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
-assign_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
+te_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
+binop_mt = { __index={} }
+unop_mt = { __index={} }
+call_mt = { __index={} }
+assign_mt = { __index={} }
 define_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
 block_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
 if_then_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
@@ -98,8 +107,30 @@ function binop_mt:__tostring()
 	return '('..tostring(self.larg)..' '..self.op..' '..tostring(self.rarg)..')'
 end
 
+function is_pure(e) 
+	if type(e)=='table' then return e:is_pure() end
+	return true--type(e)~='userdata' --and fal tonumber(e)~=nil
+end
+
+function binop_mt.__index:is_pure() 
+	return is_pure(self.larg) and is_pure(self.rarg) 
+end
+
 function unop_mt:__tostring() 
-	return tostring(self.op)..'('..tostring(self.arg)..')'
+	return tostring(self.op)..tostring(self.arg)
+end
+
+function unop_mt.__index:is_pure() 
+	return self.op~='++' and self.op~='--' and is_pure(self.arg) 
+end
+
+function call_mt.__index:is_pure() 
+	if self.args then
+		for k=1, #self.args do
+			if not is_pure(self.args[k]) then return false end
+		end
+	end
+	return is_pure(self.fn) 
 end
 
 
@@ -108,12 +139,12 @@ function assign_mt:__tostring()
 end
 
 function define_mt:__tostring() 
-	return tostring(self.te)..' '..tostring(self.var)..
-		(self.value~=nil and ' = '..tostring(self.value) or '')
+	return tostring(self.te)..': '..tostring(self.var)..
+		(self.value~=nil and ' = '..tostring(self.value)..' @'..tostring(is_pure(self.value)) or '')
 end
 
 function call_mt:__tostring() 
-	local s = self.fn..'('
+	local s = tostring(self.fn)..'('
 	if self.args then
 		for k=1, #self.args do
 			s = s..tostring(self.args[k])..(k==#self.args and '' or ', ')
