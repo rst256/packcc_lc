@@ -6,13 +6,13 @@ end
 
 function pcc_action_stats_1(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    table.insert(self, e) --print(auxil:pos(e.s), e) 
+    table.insert(self, e) --print(auxil:pos(e.start_pos), e) 
 
 end
 
 function pcc_action_stat_0(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    e.s=_0s e.e=_0e return e 
+    e.start_pos=_0s e.end_pos=_0e return e 
 
 end
 
@@ -104,13 +104,31 @@ end
 
 function pcc_action_define_0(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    print('error expr') 
+    return define(e) 
 
 end
 
 function pcc_action_define_1(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    self = define(e, _1, value) return self 
+    print('error expr') 
+
+end
+
+function pcc_action_define_2(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    self:add(_1, fv) 
+
+end
+
+function pcc_action_define_3(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    print('error expr') 
+
+end
+
+function pcc_action_define_4(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    self:add(_2, nv) 
 
 end
 
@@ -162,7 +180,7 @@ end
 
 function pcc_action_define_arg_0(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    return define(t, _1) 
+    return define(t):add(_1) 
 
 end
 
@@ -277,6 +295,12 @@ end
 function pcc_action_unop_1(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
     return e 
+
+end
+
+function pcc_action_unop_stat_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    return unop(_1, Uarg) 
 
 end
 

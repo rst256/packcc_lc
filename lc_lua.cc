@@ -9,6 +9,9 @@
 	#include <stdlib.h>
 	#include <getopt.h>
 
+
+#define table_size(t) (sizeof(t)/sizeof((t)[0]))
+
 	#include "scope.h"
 
 	typedef struct {
@@ -41,36 +44,42 @@
 	static FILE* output;
 
 
+typedef int item_t;
+size_t half_div_search(item_t t[], size_t size, item_t ch){
+	size_t begin=0, end=size;
+
+	while (begin < end) {
+		size_t mid = (begin + end) / 2;
+		item_t c = t[mid];
+		if ( c < ch ){
+			begin = mid + 1;
+		}else if ( c > ch ){
+			if(mid==0 || t[mid-1] < ch) return mid;
+			end = mid;
+		}else {
+			return mid+1;
+		}
+	}
+
+	return 0;
+}
+
+
+
 int get_line(parser_t* p, int pos){ 
 	if(p->pos < pos) return 0;
 
-
-/*	size_t begin=0, end=p->lines_count;
-	
-	while (begin < end) {
-		size_t mid = (begin + end) / 2;
-		if (p->lines[i] < pos){
-			begin = mid + 1;
-		}else if (p->lines[i] > pos){
-			end = mid;
-		}else {
-			return ((ch - t[mid].first) % t[mid].step) == 0;
-		}
-	}
-	*/
-
-
-	for(int i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) return i+1;
-	return p->lines_count+1; 
+	//for(int i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) return i+1;
+	return half_div_search(p->lines, p->lines_count, pos)+1;
+//p->lines_count+1; 
 }
 
 int get_col(parser_t* p, int pos){ 
 	if(p->pos < pos) return 0;
-	int i;
-	for(i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) break;
-	return ( i ? pos - p->lines[i-1] : pos ) + 1; 
+	int line = half_div_search(p->lines, p->lines_count, pos);
+	//for(i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) break;
+	return ( line  ? pos - p->lines[line-1] : pos ) + 1; 
 }
-
 
 
 
@@ -151,16 +160,37 @@ static int CmptSymbol___newindex(lua_State *L){
 	return 0;
 }
 
-
-
-
-
-#define CMPT_OBJECT_TNAME "parser_auxil"
+/*
+#define LUA_USERDATA_PTR(TYPE, ) luaL_checkudata(L, i, CMPT_OBJECT_TNAME);
 static parser_t**  check_auxil(lua_State *L, int i){
 	parser_t** ts = luaL_checkudata(L, i, CMPT_OBJECT_TNAME);
-	if (ts == NULL) luaL_error(L, "userdata '%s' object has been freed", CMPT_OBJECT_TNAME);
+	if (ts == NULL || *ts == NULL ) 
+		luaL_error(L, "userdata '%s' object has been freed", CMPT_OBJECT_TNAME);
 	return ts;
 }
+*/
+
+#define CMPT_OBJECT_TNAME "parser_auxil"
+
+static parser_t**  check_auxil(lua_State *L, int i){
+	parser_t** ts = luaL_checkudata(L, i, CMPT_OBJECT_TNAME);
+	if (ts == NULL || *ts == NULL ) 
+		luaL_error(L, "userdata '%s' object has been freed", CMPT_OBJECT_TNAME);
+	return ts;
+}
+/*
+static scope_t* check_scope(lua_State *L, int i){
+	if(luaL_testudata(L, i, CMPT_OBJECT_TNAME)){
+		return *check_auxil(L, i)->scope;
+	}else{
+
+	}
+	scope_t** ts = luaL_checkudata(L, i, CMPT_SCOPE_TNAME);
+	if (ts == NULL || *ts == NULL ) 
+		luaL_error(L, "userdata '%s' object has been freed", CMPT_OBJECT_TNAME);
+	return *ts;
+}
+*/
 
 static int createCmptObject(lua_State *L, parser_t* parser){
 	parser_t** obj = lua_newuserdata(L, sizeof(parser_t*));
@@ -311,7 +341,90 @@ static int _scope_next(lua_State *L){
 }
 
 
+/*
 
+static int CmptObject_scope_sub(lua_State *L){
+	parser_t* p = *check_auxil(L, 1);
+	p->scope = scope_child(p->scope, NULL);
+	p->level++;
+	return 0;
+}
+
+static int CmptObject_scope_up(lua_State *L){
+	parser_t* p = *check_auxil(L, 1);
+	if( !(p->scope = scope_parent(p->scope)) ) luaL_error(L, "end of scope");
+	p->level--;
+	return 0;
+}
+
+static int CmptObject_scope_find(lua_State *L){
+	parser_t* p = *check_auxil(L, 1);
+	symbol_t* sym = luaL_testudata(L, 2, CMPT_SYMBOL_TNAME) ? 
+		*(symbol_t**)luaL_checkudata(L, 2, CMPT_SYMBOL_TNAME) : 
+			scope_find(p->scope, ( lua_type(L, 2)==LUA_TUSERDATA ? 
+				*(ident_t**)lua_touserdata(L, 2) : 
+				ident_add(p->idents, luaL_checkstring(L, 2)) 
+			));
+	if(sym) 
+		createCmptSymbol(L, sym);
+		// lua_rawgeti(L, LUA_REGISTRYINDEX, symbol_data(sym)); 
+	else 
+		lua_pushnil(L);
+	return 1;
+}
+
+static int CmptObject_scope_add(lua_State *L){
+	parser_t* p = *check_auxil(L, 1);
+	if(lua_isnoneornil(L, 3)) lua_newtable(L);
+	symbol_t* sym = scope_define(p->scope, 
+		( lua_type(L, 2)==LUA_TUSERDATA ? 
+			*(ident_t**)lua_touserdata(L, 2) : ident_add(p->idents, luaL_checkstring(L, 2)) ),
+		luaL_ref(L, LUA_REGISTRYINDEX)
+	);
+	if(sym) 
+		createCmptSymbol(L, sym);
+	else 
+		lua_pushnil(L);
+	// lua_pushboolean(L, sym!=NULL);
+	return 1;
+}
+
+static int scope_next_fn(lua_State *L){
+	scope_iter_t iter = lua_touserdata(L, 1);
+	if(scope_iter_end(iter)){
+		lua_pushnil(L);
+		scope_iter_delete(iter);		
+		free(iter);
+		return 1;
+	}
+	createCmptSymbol(L, scope_iter_value(iter));
+	lua_pushlightuserdata(L, scope_iter_key(iter));
+	scope_iter_next(iter);
+	return 2;
+}
+
+static int CmptObject_scope_pairs(lua_State *L){
+	parser_t* p = *check_auxil(L, 1);
+	scope_iter_t iter = scope_iter_new(p->scope, NULL);
+	lua_pushcfunction(L, scope_next_fn);
+	lua_pushlightuserdata(L, iter);
+	return 2;
+}
+
+static int CmptObject_scope_first(lua_State *L){
+	parser_t* p = *check_auxil(L, 1);
+	createCmptSymbol(L, scope_first(p->scope));
+	return 1;
+}
+
+static int _scope_next(lua_State *L){
+	symbol_t** self = luaL_checkudata(L, 1, CMPT_SYMBOL_TNAME);
+	if (!self || !(*self)) 
+		luaL_error(L, "userdata '%s' object has been freed", CMPT_SYMBOL_TNAME);
+	createCmptSymbol(L, scope_next(*self));
+	return 1;
+}
+*/
 	
 
 
@@ -329,7 +442,7 @@ static int CmptObject___tostring(lua_State *L){
 
 
 static int Cmpt_parse_file(lua_State *L){
-		const char * f = luaL_checkstring(L, 1);
+		const char * f = strdup(luaL_checkstring(L, 1));
 		FILE * fd = fopen(f, "r");
 		if(!fd) luaL_error(L, "can't open input file: `%s`\n", f);
 
@@ -358,7 +471,6 @@ static int Cmpt_parse_file(lua_State *L){
 		int ref;
 		lc_parse(ctx, &ref);
 			lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
-
 		lc_destroy(ctx);
 
 	return 1;
@@ -374,14 +486,14 @@ static int Cmpt_parse_file(lua_State *L){
 ########$ statement
 stats <-  
 	{ return block(auxil:clone()) } 
-	( e:stat { table.insert(self, e) --print(auxil:pos(e.s), e) } )+
+	( e:stat { table.insert(self, e) --print(auxil:pos(e.start_pos), e) } )+
 
 stat <- ( 
 		e:while_loop / e:repeat_loop / e:for_loop 
 		/ e:continue_cmd / e:break_cmd / e:ret_stat 
 		/ e:define_func / e:if_then / e:block / e:assign 
-		/ e:define / e:call _ 
-	) { e.s=_0s e.e=_0e return e }
+		/ e:unop_stat / e:define / e:call _ 
+	) { e.start_pos=_0s e.end_pos=_0e return e }
 
 block <-
 	'do' { auxil:scope_sub() return block(auxil:clone(), 'do', 'end') } _ ( e:stat { table.insert(self, e) } )+ _ 'end' _ { auxil:scope_up() } _
@@ -390,11 +502,28 @@ block <-
 _block <-
 	{ auxil:scope_sub() return block(auxil:clone()) } _ ( e:stat { table.insert(self, e) } )+ { auxil:scope_up() }
 
+# 
+# if_then <-
+# 	'if' _ cond:expression _ 'then' _ th:_block _ ( 'else' _ el:_block _ )? 'end' _ 
+# 		{ return if_then(cond, th, el) }
 
 if_then <-
-	'if' _ cond:expression _ 'then' _ th:_block _ ( 'else' _ el:_block _ )? 'end' _ 
-		{ return if_then(cond, th, el) }
+	'if' _ cond:expression _ 'then' _ th:_block _ 
+	# { return asn_tmpl("if $cond then $th $el end", "if_then", { cond=cond, th=th }) }
+	# (elif:elseif_list { self.elif = elif } )? _ 
+	( 'else' _ el:_block _)? 'end' _ 
+# {return asn_tmpl("if $cond then $th else $el end", "if_then", { cond=cond, th=th, el=el })}
+{ return if_then(cond, th, el) }
 
+# elseif_list <-
+# 	'elseif' _ cf:expression _ 'then' _ thf:_block _ 
+# 		{ return asn_list({ 
+# 				asn_tmpl("elseif $c then $th", "elseif_block", { c=cf, th=thf })
+# 			}, '\n', 'elseif_list')
+# 		}
+# 	( 'elseif' _ cn:expression _ 'then' _ thn:_block _ 
+# 		{ table.insert(self, asn_tmpl("elseif $c then $th", "elseif_block", { c=cn, th=thn })) }
+# 	)*
 
 for_loop <-
 	'for' _ { auxil:scope_sub() } loop_vars:define_args _ 'in' _ iter:expression _ 'do' _ body:_block _ 'end' _ 
@@ -432,8 +561,10 @@ return self }
 
 
 define <-  
-	e:type_expr _ ':' _ < ident > _ ( '=' _ 
-		value:expression ~{ print('error expr') } _ )? { self = define(e, $1, value) return self }
+	e:type_expr _ ':' { return define(e) } _  
+		< ident > _ ( '=' _ fv:expression ~{ print('error expr') } _ )? { self:add($1, fv) }
+		( ',' _ < ident > _ ( '=' _ nv:expression ~{ print('error expr') } _ )? { self:add($2, nv) } )*
+
 
 
 define_func <- 
@@ -465,7 +596,7 @@ define_args <-
 	_ ( ',' _ n:define_arg { table.insert(self, n) } _ )* 
 
 define_arg <-
-	t:type_expr _ ':' _ < ident > { return define(t, $1) }
+	t:type_expr _ ':' _ < ident > { return define(t):add($1) }
 
 
 ret_stat <-
@@ -520,6 +651,12 @@ factor <-
 unop <-
 	< '$' / '@' / '--' / '-' / '++' / '!' > _ Uarg:unop { return unop($1, Uarg) }
 	/ e:primary   { return e }
+
+
+
+unop_stat <-
+	< '--' / '++' > _ Uarg:unop { return unop($1, Uarg) }
+
 
 
 primary <- 

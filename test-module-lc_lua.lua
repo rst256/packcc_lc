@@ -4,7 +4,7 @@ p=l.parse_file'lc_lua-test.lc'
 function block_tostring(self)
 	local s = self.b..'\n'
 	for k=1, #self do
-		s = s..AUXIL:pos(self[k].s)..('\t'):rep(self.auxil:get_level())..
+		s = s..AUXIL:pos(self[k].start_pos)..('\t'):rep(self.auxil:get_level())..
 		(getmetatable(self[k])=='block' and
 			block_tostring(self[k]) or tostring(self[k]))
 		..'\n'
@@ -20,8 +20,8 @@ print(block_tostring(p))
 --print(sym, sym())
 --print(sym.define_in_node:pos())
 --print(sym.type_expr)
---print('scope')
---for s, ss in AUXIL:scope_pairs() do print(ss, s) end
+print('scope')
+for s, ss in AUXIL:scope_pairs() do print(ss, s) end
 
 
 print'===================================='

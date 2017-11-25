@@ -3,36 +3,39 @@
 #ifndef PCC_INCLUDED__LC_LUA_H
 #define PCC_INCLUDED__LC_LUA_H
 
-    char * strdup(const char *);
-    #include <string.h>
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <getopt.h>
+        char * strdup(const char *);
+        #include <string.h>
+        #include <stdio.h>
+        #include <stdlib.h>
+        #include <getopt.h>
 
-    #include "scope.h"
 
-    typedef struct {
-            lua_State* L;
-            FILE* input;
-            const char * file_name;
-            int lines_count;
-            int pos;
-            int level;
-            int ctx;
-            scope_t* scope;
-            idents_t* idents;
-            int lines[2048];
-    } parser_t;
-    //# include "ast.h"
-    int pcc_getchar(parser_t* p){ 
-            int c;
-            while( (c = fgetc(p->input))=='\r' );
-            p->pos += 1;
-            if(c=='\n'){ p->lines[p->lines_count++] = p->pos; }
-            return c; 
-    }
+#define table_size(t) (sizeof(t)/sizeof((t)[0]))
 
-#define PCC_GETCHAR(auxil) pcc_getchar(auxil)
+        #include "scope.h"
+
+        typedef struct {
+                lua_State* L;
+                FILE* input;
+                const char * file_name;
+                int lines_count;
+                int pos;
+                int level;
+                int ctx;
+                scope_t* scope;
+                idents_t* idents;
+                int lines[2048];
+        } parser_t;
+        //# include "ast.h"
+        int pcc_getchar(parser_t* p){ 
+                int c;
+                while( (c = fgetc(p->input))=='\r' );
+                p->pos += 1;
+                if(c=='\n'){ p->lines[p->lines_count++] = p->pos; }
+                return c; 
+        }
+
+    #define PCC_GETCHAR(auxil) pcc_getchar(auxil)
 
 
 #ifdef __cplusplus

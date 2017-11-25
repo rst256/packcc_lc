@@ -22,7 +22,7 @@ function asn_tmpl(tmpl, mt_name, this)
 	assert(tmpl)
 	return setmetatable(this or {}, {
 		__metatable=mt_name,
-		__tostring=function(self) 
+		__tostring=function(self)
 			local t = setmetatable({}, {
 				__index=function(s, k) return tostring(self[k] or '') end
 			})
@@ -61,16 +61,36 @@ function printf(fmt, ...)
 	io.write(fmt:format(...))
 end
 
+function pos(self)
+	return AUXIL:pos(self.start_pos)
+end
+
 literal_mt = { __index={ is_literal=true } }
 binop_mt = { __index={ type_expr=type_int } }
 unop_mt = { __index={} }
 call_mt = { __index={ type_expr=type_int } }
 assign_mt = { __index={} }
-define_mt = { __index={} }
+define_mt = { __index={
+	pos=pos,
+	add=function(self, var, value)
+		local var_sym = AUXIL:scope_add(var, {
+			define_in_node=self,
+			type_expr=self.te,
+			is_uninitialized=(value==nil),
+			is_lvalue=true
+		})
+		if not var_sym then
+			error('\n'..AUXIL:pos(_0e).."redefine: `"..tostring(var)..
+				'` prev definition is '..tostring(AUXIL:scope_find(var)))
+		end
+		table.insert(self, value~=nil and assign(var_sym, value) or var_sym)
+		return self
+	end
+} }
 define_args_mt = { __index={ type_expr=type_int } }
-define_func_mt = { __index={ type_expr=type_int } }
+define_func_mt = { __index={ pos=pos, type_expr=type_int } }
 block_mt = { __metatable="block" }
-if_then_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
+if_then_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end }
 
 function symof(expr)
 	if tonumber(expr) or type(expr)=='string' then
@@ -114,18 +134,17 @@ function assign(var, value)
 	}, assign_mt)
 end
 
-function define(t, var, value)
-	local this = setmetatable({ te=t, var=var, value=value },
-		define_mt)
-	local var_sym = AUXIL:scope_add(var, {
-		define_in_node=this,
-		type_expr=t,
-		is_uninitialized=value==nil,
-		is_lvalue=true
-	})
-	if not var_sym then
-		print("redefine: ", var, AUXIL:scope_find(var))
-	end
+function define(t)
+	local this = setmetatable({ te=t }, define_mt)
+	-- local var_sym = AUXIL:scope_add(var, {
+	-- 	define_in_node=this,
+	-- 	type_expr=t,
+	-- 	is_uninitialized=value==nil,
+	-- 	is_lvalue=true
+	-- })
+	-- if not var_sym then
+	-- 	print("redefine: ", var, AUXIL:scope_find(var))
+	-- end
 
 	return this
 end
@@ -286,12 +305,11 @@ function assign_mt:__tostring()
 end
 
 function define_mt:__tostring()
-	return tostring(self.te)..': '..tostring(self.var)..
-		(self.value~=nil and ' = '..tostring(self.value) or '')
-end
-
-function define_mt.__index:pos()
-	return AUXIL:pos(self.s)
+	local s = tostring(self.te)..': '
+	for k=1, #self do
+		s = s..tostring(self[k])..	(k==#self and '' or ', ')
+	end
+	return s
 end
 
 function call_mt:__tostring()
@@ -316,7 +334,7 @@ function define_func_mt:__tostring()
 	-- 	-- end
 	-- end
 	return s
-		
+
 end
 
 function define_args_mt:__tostring()
@@ -325,10 +343,6 @@ function define_args_mt:__tostring()
 		s = s..tostring(self[k])..	(k==#self and '' or ', ')
 	end
 	return s
-end
-
-function define_func_mt.__index:pos()
-	return AUXIL:pos(self.s)
 end
 
 function block_mt:__tostring()
@@ -341,6 +355,6 @@ end
 
 function if_then_mt:__tostring()
 	local s = 'if '..tostring(self.cond)..' then '..tostring(self.th)
-	if self.el then s = s..' else '..tostring(self.el) end
+	if self.el then s = s..'else '..tostring(self.el) end
 	return s..'end'
 end

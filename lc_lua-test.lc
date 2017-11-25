@@ -1,6 +1,6 @@
 void*: y
 const long*: x=-5.5
-short: vvv
+short: vvv, vv=777
 
 x=++y
 vvv=6 x=666*3+0-++y @x=-666
@@ -45,8 +45,7 @@ function int:f3() return 5	end
 function const char*:(const char*, int, int): fx
 const function const char* :(const char*, int, int): fx_const
 const (function const char*: (const char*, int, int))*[10]: fx_const_ptr
-const function const char*: (const char*, int, int) *: fx_const_ptr2
-@fx_const_ptr2=0
+const function const char*: (const char*, int, int) *: fx_const_ptr1, fx_const_ptr2 = @fx_const_ptr1
 for int: s, const char*: ss in scope_pairs() do
 	print(s, ss)
 end
@@ -56,5 +55,5 @@ while !vvv do
 end
 
 repeat
-	vvv = vvv-1
+	--vvv
 until vvv>0
