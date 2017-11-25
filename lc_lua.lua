@@ -58,6 +58,37 @@ function pcc_action_if_then_0(self, auxil, capture, vars)
 
 end
 
+function pcc_action_for_loop_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    auxil:scope_sub() 
+
+end
+
+function pcc_action_for_loop_1(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    auxil:scope_up()
+    return asn_tmpl("for $loop_vars in $iter do $body end", 'for_loop', {
+            loop_vars=loop_vars, iter=iter, body=body
+    }) 
+
+end
+
+function pcc_action_while_loop_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    return asn_tmpl("while $while_cond do $body end", 'while_loop', {
+            while_cond=while_cond, body=body
+    }) 
+
+end
+
+function pcc_action_repeat_loop_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    return asn_tmpl("repeat $body until $until_cond", 'repeat_loop', {
+            until_cond=until_cond, body=body
+    }) 
+
+end
+
 function pcc_action_assign_0(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
     print('error expr') 
@@ -93,7 +124,27 @@ function pcc_action_define_func_1(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
     local scope=AUXIL:clone() 
     auxil:scope_up() 
-    return define_func{ fn=_1, args=fn_args, ret_type=rt, body=body, scope=scope }
+    return define_func{ 
+            fn=_1, args=fn_args, ret_type=rt, 
+            body=body, scope=scope 
+    }
+
+end
+
+function pcc_action_define_func_2(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    AUXIL:scope_sub() 
+
+end
+
+function pcc_action_define_func_3(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    local scope=AUXIL:clone() 
+    auxil:scope_up() 
+    return define_func{ 
+            fn=_2, args=fn_args,
+            body=body, scope=scope 
+    }
 
 end
 
@@ -112,6 +163,36 @@ end
 function pcc_action_define_arg_0(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
     return define(t, _1) 
+
+end
+
+function pcc_action_ret_stat_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    return asn_list({}, ', ', 'ret_stat', 'return ') 
+
+end
+
+function pcc_action_ret_stat_1(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    table.insert(self, vars.first) 
+
+end
+
+function pcc_action_ret_stat_2(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    table.insert(self, vars.next) 
+
+end
+
+function pcc_action_break_cmd_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    return asn_simple('break', 'break_cmd') 
+
+end
+
+function pcc_action_continue_cmd_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    return asn_simple('continue', 'continue_cmd') 
 
 end
 

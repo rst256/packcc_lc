@@ -18,14 +18,37 @@ type_char = AUXIL:scope_add("char", scalar_type(1))
 type_string = te.pointer( te.primary(type_char, 'const') )
 
 
+function asn_tmpl(tmpl, mt_name, this)
+	assert(tmpl)
+	return setmetatable(this or {}, {
+		__metatable=mt_name,
+		__tostring=function(self) 
+			local t = setmetatable({}, {
+				__index=function(s, k) return tostring(self[k] or '') end
+			})
+			return (string.gsub(tmpl, "%$([%w_]+)", t))
+		end
+	})
+end
 
+function asn_simple(text, mt_name)
+	assert(text)
+	return setmetatable({}, {
+		__metatable=mt_name,
+		__tostring=function() return text end
+	})
+end
 
-function asn_list(this, sep, mt_name)
+break_cmd = asn_simple('break', 'break_cmd')
+continue_cmd = asn_simple('continue', 'continue_cmd')
+
+function asn_list(this, sep, mt_name, prefix)
 	local sep = sep or ''
+	local prefix = prefix or ''
 	return setmetatable(this or {}, {
 		__metatable=mt_name,
 		__tostring=function(self)
-			local s = ''
+			local s = prefix
 			for k=1, #self do
 				s = s..tostring(self[k])..	(k==#self and '' or sep)
 			end
@@ -282,16 +305,18 @@ function call_mt:__tostring()
 end
 
 function define_func_mt:__tostring()
-	local s = tostring(self.fn)..'('..tostring(self.args or '')
+	local s = 'function '..
+		(self.ret_type~=nil and tostring(self.ret_type)..': ' or '')..
+		tostring(self.fn)..'('..tostring(self.args or '')..') '..
+		tostring(self.body or ' ')..'end'
 	-- if self.args then
 	-- 	-- for k=1, #self.args do
 	-- 	-- 	s = s..tostring(self.args[k])..
 	-- 	-- 		(k==#self.args and '' or ', ')
 	-- 	-- end
 	-- end
-	return s..') '..
-		(self.ret_type~=nil and ': '..tostring(self.ret_type) or '')
-		..tostring(self.body or ' ')..'end'
+	return s
+		
 end
 
 function define_args_mt:__tostring()

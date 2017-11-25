@@ -28,21 +28,33 @@ int [50] *: int50_ptr
 int [50] : int50
 
 
-function f1(int*: ia)
+function  f1(int*: ia)
 	@ia = 666
 	int: r = print(i)
 end
 
-function int, const char*, int :f2(int*: ia1, long[5]: ia2) 
+function int, const char*, int :f2(int*: ia1, long[5]: ia2)
 	@ia1 = 666
 	int: r = print(i)
+	if ia1>0 && ia2<=99 then continue else break end
 end
 
 
-function int:f3() 	end
+function int:f3() return 5	end
 
 function const char*:(const char*, int, int): fx
 const function const char* :(const char*, int, int): fx_const
 const (function const char*: (const char*, int, int))*[10]: fx_const_ptr
 const function const char*: (const char*, int, int) *: fx_const_ptr2
 @fx_const_ptr2=0
+for int: s, const char*: ss in scope_pairs() do
+	print(s, ss)
+end
+
+while !vvv do
+	if vvv then break end
+end
+
+repeat
+	vvv = vvv-1
+until vvv>0

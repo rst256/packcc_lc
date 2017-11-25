@@ -376,8 +376,12 @@ stats <-
 	{ return block(auxil:clone()) } 
 	( e:stat { table.insert(self, e) --print(auxil:pos(e.s), e) } )+
 
-stat <-  
-	( e:define_func / e:if_then / e:block / e:assign / e:define / e:call _ ) { e.s=_0s e.e=_0e return e }
+stat <- ( 
+		e:while_loop / e:repeat_loop / e:for_loop 
+		/ e:continue_cmd / e:break_cmd / e:ret_stat 
+		/ e:define_func / e:if_then / e:block / e:assign 
+		/ e:define / e:call _ 
+	) { e.s=_0s e.e=_0e return e }
 
 block <-
 	'do' { auxil:scope_sub() return block(auxil:clone(), 'do', 'end') } _ ( e:stat { table.insert(self, e) } )+ _ 'end' _ { auxil:scope_up() } _
@@ -392,6 +396,34 @@ if_then <-
 		{ return if_then(cond, th, el) }
 
 
+for_loop <-
+	'for' _ { auxil:scope_sub() } loop_vars:define_args _ 'in' _ iter:expression _ 'do' _ body:_block _ 'end' _ 
+		{ 
+			auxil:scope_up()
+			return asn_tmpl("for $loop_vars in $iter do $body end", 'for_loop', {
+				loop_vars=loop_vars, iter=iter, body=body
+			}) 
+		}
+
+
+while_loop <-
+	'while' _ while_cond:expression _ 'do' _ body:_block _ 'end' _ 
+		{ 
+			return asn_tmpl("while $while_cond do $body end", 'while_loop', {
+				while_cond=while_cond, body=body
+			}) 
+		}
+
+
+repeat_loop <-
+	'repeat' _ body:_block _ 'until' _ until_cond:expression _ 
+		{ 
+			return asn_tmpl("repeat $body until $until_cond", 'repeat_loop', {
+				until_cond=until_cond, body=body
+			}) 
+		}
+
+
 assign <-  
 	var:_lvalue _ '=' _ 
 		value:expression ~{ print('error expr') } _ { 
@@ -404,14 +436,27 @@ define <-
 		value:expression ~{ print('error expr') } _ )? { self = define(e, $1, value) return self }
 
 
-define_func <-  
-	'function' _ ( rt:type_func_args _ ':' _ )?  < ident > _ '(' _  { AUXIL:scope_sub() }
-	fn_args:define_args? _ ')' _ body:_block? _ 'end' _   
-		{ 
-			local scope=AUXIL:clone() 
-			auxil:scope_up() 
-			return define_func{ fn=$1, args=fn_args, ret_type=rt, body=body, scope=scope }
-		}
+define_func <- 
+	'function' _ rt:type_func_args _ ':' _ < ident > _ '(' _  { AUXIL:scope_sub() }
+		fn_args:define_args? _ ')' _ body:_block? _ 'end' _   
+			{ 
+				local scope=AUXIL:clone() 
+				auxil:scope_up() 
+				return define_func{ 
+					fn=$1, args=fn_args, ret_type=rt, 
+					body=body, scope=scope 
+				}
+			}
+	/ 'function' _ < ident > _ '(' _  { AUXIL:scope_sub() }
+		fn_args:define_args? _ ')' _ body:_block? _ 'end' _   		
+			{ 
+				local scope=AUXIL:clone() 
+				auxil:scope_up() 
+				return define_func{ 
+					fn=$2, args=fn_args,
+					body=body, scope=scope 
+				}
+			}
 
 
 
@@ -421,6 +466,22 @@ define_args <-
 
 define_arg <-
 	t:type_expr _ ':' _ < ident > { return define(t, $1) }
+
+
+ret_stat <-
+	'return' { return asn_list({}, ', ', 'ret_stat', 'return ') } _ 
+		( first:expression { table.insert(self, vars.first) } )? 
+		_ ( ',' _ next:expression { table.insert(self, vars.next) } _ )* 
+
+
+break_cmd <- 
+	'break' _ { return asn_simple('break', 'break_cmd') }
+
+
+continue_cmd <- 
+	'continue' _ { return asn_simple('continue', 'continue_cmd') }
+
+
 
 
 
@@ -488,6 +549,11 @@ call <-
 	_ (first:expression {  self.args = { vars.first } })? 
 	_ ( ',' _ next:expression { table.insert(self.args, vars.next) } _ )* 
 	')'   
+
+
+# idents_list <-
+# 	< ident > { return asn_list({ $1 }, ', ', 'idents_list') }
+# 	_ ( ',' _ < ident > { table.insert(self, $2) } _ )* 
 
 
 _lvalue <- 
