@@ -19,42 +19,56 @@ local function complementation(base, this)
 	return this
 end
 
-local te_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
-local primary_mt = {}
-local pointer_mt = {}
-local te_array_mt = { __concat=function(a, b) return tostring(a)..tostring(b) end}
+local te_mt = {}
+local primary_mt = { __index={} }
+local pointer_mt = { __index={ is_pointer=true } }
+local array_mt =   { __index={} }
 
-function M.primary(base_type, qualifier) 
-	return setmetatable({ base_type=base_type, qualifier=qualifier }, 
-		primary_mt)
+function M.primary(base_type, qualifier)
+	return setmetatable({
+		base_type=base_type,
+		qualifier=qualifier,
+		sizeof=base_type.sizeof
+	}, primary_mt)
 end
 
-function M.pointer(base_type, qualifier) 
-	return setmetatable({ base_type=base_type, qualifier=qualifier }, 
-		pointer_mt)
+function M.pointer(base_type, qualifier)
+	return setmetatable({
+		base_type=base_type,
+		qualifier=qualifier,
+		sizeof=4
+	}, pointer_mt)
 end
 
-function M.te_array(base_type, dim, qualifier) 
-	return setmetatable({ base_type=base_type, dim=dim, qualifier=qualifier }, 
-		te_array_mt)
+function M.array(base_type, dim, qualifier)
+	return setmetatable({
+		base_type=base_type,
+		dim=dim,
+		qualifier=qualifier,
+		sizeof=base_type.sizeof*tonumber(dim)
+	}, array_mt)
 end
 
 
-function te_mt:__tostring() 
+function te_mt:__tostring()
 	if self.qualifier then return tostring(self.qualifier)..' ' end
 	return ''
 end
 
-function primary_mt:__tostring() 
+function primary_mt:__tostring()
 	return tostring(self.base_type)
 end
 
-function pointer_mt:__tostring() 
+function pointer_mt:__tostring()
+	local s = tostring(self.base_type)
+	s = s..'*'
+	if self.qualifier then s = s..' '..tostring(self.qualifier) end
+	return s
 	-- if self.qualifier then return ' '..tostring(self.qualifier)..'*' end
-	return '*'
+	-- return '*'
 end
 
-function te_array_mt:__tostring() 
+function array_mt:__tostring()
 	local s = tostring(self.base_type)
 	if self.qualifier then s = s..tostring(self.qualifier)..' ' end
 	s = s..'['..self.dim..']'
@@ -62,7 +76,7 @@ function te_array_mt:__tostring()
 end
 
 complementation(te_mt, primary_mt)
-complementation(primary_mt, pointer_mt)
+-- complementation(primary_mt, pointer_mt)
 -- print(M.primary('int', 'const')..' 666')
 -- print(M.pointer('int', 'const')..' 666')
 

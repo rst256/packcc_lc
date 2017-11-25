@@ -3621,7 +3621,7 @@ static bool_t generate(context_t *ctx) {
                     fprintf(
                         lstream,
                         "function pcc_action_%s_%d(self, auxil, capture, vars)\n"
-                        "	 local _ENV = setmetatable({ vars=vars}, {__index=function(s,k) return rawget(_G, k) or rawget(vars, k) or rawget(capture, k) end })\n",
+                        "	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })\n",
                         r->name, d, get_prefix(ctx)
                     );
 							write_code_block(lstream, s, strlen(s), 4);
@@ -3719,7 +3719,7 @@ fclose(lstream);
 								/*"lua_rawgeti(L, LUA_REGISTRYINDEX, (__pcc_ctx->auxil->ctx));\n"*/
 								"lua_newtable(L);\n",
 								r->name, d
-							); int 
+							);  
                    fprintf(
                       stream,
 "lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));\n"

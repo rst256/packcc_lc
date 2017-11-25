@@ -1,20 +1,26 @@
-const long: x=5
+const long*: x=5
 short: vvv
-vvv=6 x=666*3+0 @ @ @ x=-666
+void*: y
+vvv=6 x=666*3+0 @x=-666
 do
-	vvv=6 x=666*3+0
+	long***: x
+	@ @ @ x=-666
+	vvv=6 x=666*3+1000
 	int: vvv
 	do
 		char **:vvv
-		if x&0x0F || !y then 
-			print(--x) 
-			x=0 
+		if x&0x0F || !y then
+			print(--x, y)
+			x=0+-9
 			if x=y>=0 then t=print(y) else x=999 end
 		end
 	end
 end
+short*:u
 @u=u(66, uu())
-const int*: i = 666*++x
-const int*: i2 = 666*-x
+const int*: i = 666*++x const int*: i2 = 666*-5
+const int*: i32 = 666*x
 const char * const: str = "str value"
 int [50] *: int50_ptr
+
+

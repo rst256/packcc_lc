@@ -56,6 +56,10 @@ static int CmptIdent___tostring(lua_State *L){
 #define CMPT_SYMBOL_TNAME "parser_symbol"
 
 static int createCmptSymbol(lua_State *L, symbol_t* id){
+        if(!id){
+                lua_pushnil(L);
+                return 1;
+        }
         symbol_t** obj = lua_newuserdata(L, sizeof(symbol_t*));
         if (obj == NULL) 
                 luaL_error(L, "can't allocate memory for userdata '%s'", CMPT_SYMBOL_TNAME);
@@ -76,8 +80,29 @@ static int CmptSymbol___call(lua_State *L){
         symbol_t** self = luaL_checkudata(L, 1, CMPT_SYMBOL_TNAME);
         if (!self || !(*self)) 
                 luaL_error(L, "userdata '%s' object has been freed", CMPT_SYMBOL_TNAME);
-                lua_rawgeti(L, LUA_REGISTRYINDEX, symbol_data(*self));
+        lua_rawgeti(L, LUA_REGISTRYINDEX, symbol_data(*self));
         return 1;
+}
+
+static int CmptSymbol___index(lua_State *L){
+        symbol_t** self = luaL_checkudata(L, 1, CMPT_SYMBOL_TNAME);
+        if (!self || !(*self)) 
+                luaL_error(L, "userdata '%s' object has been freed", CMPT_SYMBOL_TNAME);
+        lua_rawgeti(L, LUA_REGISTRYINDEX, symbol_data(*self));
+        lua_pushvalue(L, 2);
+        lua_gettable(L, -2);
+        return 1;
+}
+
+static int CmptSymbol___newindex(lua_State *L){
+        symbol_t** self = luaL_checkudata(L, 1, CMPT_SYMBOL_TNAME);
+        if (!self || !(*self)) 
+                luaL_error(L, "userdata '%s' object has been freed", CMPT_SYMBOL_TNAME);
+        lua_rawgeti(L, LUA_REGISTRYINDEX, symbol_data(*self));
+        lua_pushvalue(L, 2);
+        lua_pushvalue(L, 3);
+        lua_settable(L, -3);
+        return 0;
 }
 
 
@@ -186,9 +211,12 @@ static int CmptObject_scope_up(lua_State *L){
 
 static int CmptObject_scope_find(lua_State *L){
         parser_t* p = *check_auxil(L, 1);
-        symbol_t* sym = scope_find(p->scope, 
-                ( lua_type(L, 2)==LUA_TUSERDATA ? 
-                        *(ident_t**)lua_touserdata(L, 2) : ident_add(p->idents, luaL_checkstring(L, 2)) ));
+        symbol_t* sym = luaL_testudata(L, 2, CMPT_SYMBOL_TNAME) ? 
+                *(symbol_t**)luaL_checkudata(L, 2, CMPT_SYMBOL_TNAME) : 
+                        scope_find(p->scope, ( lua_type(L, 2)==LUA_TUSERDATA ? 
+                                *(ident_t**)lua_touserdata(L, 2) : 
+                                ident_add(p->idents, luaL_checkstring(L, 2)) 
+                        ));
         if(sym) 
                 createCmptSymbol(L, sym);
                 // lua_rawgeti(L, LUA_REGISTRYINDEX, symbol_data(sym)); 
@@ -199,6 +227,7 @@ static int CmptObject_scope_find(lua_State *L){
 
 static int CmptObject_scope_add(lua_State *L){
         parser_t* p = *check_auxil(L, 1);
+        if(lua_isnoneornil(L, 3)) lua_newtable(L);
         symbol_t* sym = scope_define(p->scope, 
                 ( lua_type(L, 2)==LUA_TUSERDATA ? 
                         *(ident_t**)lua_touserdata(L, 2) : ident_add(p->idents, luaL_checkstring(L, 2)) ),
@@ -212,6 +241,48 @@ static int CmptObject_scope_add(lua_State *L){
         return 1;
 }
 
+static int scope_next_fn(lua_State *L){
+        scope_iter_t iter = lua_touserdata(L, 1);
+        if(scope_iter_end(iter)){
+                lua_pushnil(L);
+                scope_iter_delete(iter);		
+                free(iter);
+                return 1;
+        }
+        createCmptSymbol(L, scope_iter_value(iter));
+        lua_pushlightuserdata(L, scope_iter_key(iter));
+        scope_iter_next(iter);
+        return 2;
+}
+
+static int CmptObject_scope_pairs(lua_State *L){
+        parser_t* p = *check_auxil(L, 1);
+        scope_iter_t iter = scope_iter_new(p->scope, NULL);
+        lua_pushcfunction(L, scope_next_fn);
+        lua_pushlightuserdata(L, iter);
+        return 2;
+}
+
+static int CmptObject_scope_first(lua_State *L){
+        parser_t* p = *check_auxil(L, 1);
+        createCmptSymbol(L, scope_first(p->scope));
+        return 1;
+}
+
+static int _scope_next(lua_State *L){
+        symbol_t** self = luaL_checkudata(L, 1, CMPT_SYMBOL_TNAME);
+        if (!self || !(*self)) 
+                luaL_error(L, "userdata '%s' object has been freed", CMPT_SYMBOL_TNAME);
+        createCmptSymbol(L, scope_next(*self));
+        return 1;
+}
+
+
+
+
+
+
+
 static int CmptObject___gc(lua_State *L){
         //parser_t** obj = checkCmptObject(L, 1);
         //luaL_unref(L, LUA_REGISTRYINDEX, (*obj)->ctx);
@@ -223,6 +294,42 @@ static int CmptObject___tostring(lua_State *L){
         return 1;
 }
 
+
+static int Cmpt_parse_file(lua_State *L){
+                const char * f = luaL_checkstring(L, 1);
+                FILE * fd = fopen(f, "r");
+                if(!fd) luaL_error(L, "can't open input file: `%s`\n", f);
+
+                        lua_newtable(L);	
+
+                        parser_t ps = (parser_t){ 
+                                L, fd, f, 0, 0, 0, luaL_ref(L, LUA_REGISTRYINDEX), 
+                                scope_new(NULL), new_idents()
+                        };
+
+
+
+        createCmptObject(L, &(ps));
+        lua_setglobal(L, "AUXIL");
+
+                const char *include_file = "C:\\lib\\packcc\\lc_lua_h.lua";
+                        if(include_file){ 
+                                printf ("include file: %s\n", include_file); 
+                                if(luaL_dofile(L, include_file))
+                                        luaL_error(L, "C:\\lib\\packcc\\%s\n", luaL_checkstring(L, -1));
+                        }
+                        if(luaL_dofile(L, "C:\\lib\\packcc\\lc_lua.lua"))
+                                luaL_error(L, luaL_checkstring(L, -1));
+
+                lc_context_t *ctx = lc_create(&(ps));
+                int ref;
+                lc_parse(ctx, &ref);
+                        lua_rawgeti(L, LUA_REGISTRYINDEX, ref);
+
+                lc_destroy(ctx);
+
+        return 1;
+}
 
 
         #define  OUT(...) fprintf(output, __VA_ARGS__)
@@ -1089,11 +1196,42 @@ static void pcc_action_stats_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, p
 lua_State *L = (__pcc_ctx->auxil->L);
 lua_newtable(L);
 #define __ (*__pcc_out)
-#define e (*__pcc_in->data.leaf.values.buf[0])
 #define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
 #define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
 #define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
 if( lua_getglobal(L, "pcc_action_stats_0") == LUA_TFUNCTION ){
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
+createCmptObject(L, __pcc_ctx->auxil);
+lua_newtable(L);
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));
+lua_setfield(L, -2, "_0"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);
+lua_setfield(L, -2, "_0s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
+lua_setfield(L, -2, "_0e"); 
+lua_newtable(L);
+lua_call(L, 4, 1);    
+ if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
+}else{
+printf("`pcc_action_stats_0` is not a function\n");
+ }
+
+#undef _0e
+#undef _0s
+#undef _0
+#undef __
+#undef auxil
+}
+
+static void pcc_action_stats_1(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+lua_State *L = (__pcc_ctx->auxil->L);
+lua_newtable(L);
+#define __ (*__pcc_out)
+#define e (*__pcc_in->data.leaf.values.buf[0])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+if( lua_getglobal(L, "pcc_action_stats_1") == LUA_TFUNCTION ){
 lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
 createCmptObject(L, __pcc_ctx->auxil);
 lua_newtable(L);
@@ -1109,7 +1247,7 @@ lua_setfield(L, -2, "e");
 lua_call(L, 4, 1);    
  if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
 }else{
-printf("`pcc_action_stats_0` is not a function\n");
+printf("`pcc_action_stats_1` is not a function\n");
  }
 
 #undef _0e
@@ -2076,7 +2214,7 @@ static void pcc_action_unop_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pc
 lua_State *L = (__pcc_ctx->auxil->L);
 lua_newtable(L);
 #define __ (*__pcc_out)
-#define arg (*__pcc_in->data.leaf.values.buf[0])
+#define Uarg (*__pcc_in->data.leaf.values.buf[0])
 #define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
 #define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
 #define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
@@ -2101,7 +2239,7 @@ lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[0]->range.end);
 lua_setfield(L, -2, "_1e"); 
 lua_newtable(L);
 lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
-lua_setfield(L, -2, "arg"); 
+lua_setfield(L, -2, "Uarg"); 
 lua_call(L, 4, 1);    
  if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
 }else{
@@ -2114,7 +2252,7 @@ printf("`pcc_action_unop_0` is not a function\n");
 #undef _0e
 #undef _0s
 #undef _0
-#undef arg
+#undef Uarg
 #undef __
 #undef auxil
 }
@@ -3056,12 +3194,18 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_stats(lc_context_t *ctx) {
     pcc_value_table__resize(ctx->auxil, &chunk->values, 1);
     pcc_capture_table__resize(ctx->auxil, &chunk->capts, 0);
     {
+        pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_stats_0, 1, 0);
+        thunk->data.leaf.capt0.range.start = chunk->pos;
+        thunk->data.leaf.capt0.range.end = ctx->pos;
+        pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+    }
+    {
         int p = ctx->pos;
         int i;
         for (i = 0;; i++) {
             if (!pcc_apply_rule(ctx, pcc_evaluate_rule_stat, &chunk->thunks, &(chunk->values.buf[0]))) goto L0001;
             {
-                pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_stats_0, 1, 0);
+                pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_stats_1, 1, 0);
                 thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
                 thunk->data.leaf.capt0.range.start = chunk->pos;
                 thunk->data.leaf.capt0.range.end = ctx->pos;
@@ -4940,7 +5084,73 @@ void lc_destroy(lc_context_t *ctx) {
     pcc_context__destroy(ctx);
 }
 
+/*
+typedef int (*F)(void);
+typedef char (*F1)(void);
+typedef int (*F2)(char*);
+F fg(int v){ return ({ int foo (void){ return v; }; &foo; }); }
+F1 iter(char *s){printf("%s\n", s++);  return ({ char *ss=strdup(s), **p=&ss; char foo1 (void){char c=**p;if(c)(*p)+=1; return c; }; &foo1; }); }
+static char ss[]="1234567890\0";
+
+#define foreach(KEY, ITER) for(typeof((ITER)()) KEY; KEY=(ITER)();)
+#define foreach2(KEY, ITER) for(char KEY; (ITER)(&(KEY));)
+*/
+
+void luainit_lc_lua(lua_State *L) {
+   static luaL_Reg LuaLexer__fn[] = newluaL_Reg(CmptObject_,
+   	clone, pos, get_line, get_col, get_file, get_ctx, get_ident, get_level,
+		scope_sub, scope_up, scope_find, scope_add, 
+		scope_pairs, scope_first 
+   );
+	static luaL_Reg LuaLexer__mt[]= newluaL_Reg(CmptObject_,
+		__tostring, __gc
+	);
+	LuaM_userdata_register_class(L, CMPT_OBJECT_TNAME, LuaLexer__fn, LuaLexer__mt);
+
+
+   static luaL_Reg LuaIdent__fn[] = { NULL, NULL };
+	static luaL_Reg LuaIdent__mt[]= newluaL_Reg(CmptIdent_,
+		__tostring
+	);
+	LuaM_userdata_register_class(L, CMPT_IDENT_TNAME, LuaIdent__fn, LuaIdent__mt);
+
+
+	static luaL_Reg LuaSymbol__mt[]= newluaL_Reg(CmptSymbol_,
+		__tostring, __call, __index, __newindex
+	);
+	LuaM_userdata_register_proxy(L, CMPT_SYMBOL_TNAME, LuaSymbol__mt);
+
+
+}
+
+#define DLL_EXPORT __declspec(dllexport)
+
+DLL_EXPORT LUALIB_API int luaopen_lc_lua1(lua_State *L) {
+	luainit_lc_lua(L);
+	static luaL_Reg LuaLexer__lib[]={
+		{"parse_file", Cmpt_parse_file },
+		{"scope_next", _scope_next },
+		{NULL, NULL}
+	};
+	luaL_newlib(L, LuaLexer__lib);
+	return 1;
+}
+
 int main(int argc, char** argv) {
+//int (*f)(void) = ({ int foo (void){ return 4; }; &foo; });
+//printf("%d\n", f());
+//printf("\nforeach\n");
+//F1 f1=({ char *s=ss; char foo1 (void){char c=*s;if(c)s++; return c; }; &foo1; });//iter(ss);
+// foreach(c, f1) printf("%c ", c);
+//
+//printf("\nforeach2\n");
+//F2 f2=({ char *s=ss; int foo1 (char *c){ *c=*s;if(*c)s++; return *c; }; &foo1; });//iter(ss);
+// foreach2(c, f2) printf("%c ", c);
+//printf("\n");
+//
+//f=fg(666);
+//printf("%d\n", f());
+//return 0;
 	static int c, verbose_flag;
 	output = stdin;
 	const char* include_file = NULL;
@@ -5037,37 +5247,8 @@ int main(int argc, char** argv) {
 			};
 			luaL_openlibs(L);
 
-   static luaL_Reg LuaLexer__fn[] = newluaL_Reg(CmptObject_,
-   	clone, pos, get_line, get_col, get_file, get_ctx, get_ident, get_level,
-		scope_sub, scope_up, scope_find, scope_add
-   );
-	static luaL_Reg LuaLexer__mt[]= newluaL_Reg(CmptObject_,
-		__tostring, __gc
-	);
 
-	LuaM_userdata_register_class(L, CMPT_OBJECT_TNAME, LuaLexer__fn, LuaLexer__mt);
-
-
-   static luaL_Reg LuaIdent__fn[] = { NULL, NULL };
-// newluaL_Reg(CmptObject_,
-//    	clone, pos, get_line, get_col, get_file, get_ctx, get_ident, get_level,
-//    );
-	static luaL_Reg LuaIdent__mt[]= newluaL_Reg(CmptIdent_,
-		__tostring
-	);
-
-	LuaM_userdata_register_class(L, CMPT_IDENT_TNAME, LuaIdent__fn, LuaIdent__mt);
-
-
-
-   static luaL_Reg LuaSymbol__fn[] = { NULL, NULL };
-	static luaL_Reg LuaSymbol__mt[]= newluaL_Reg(CmptSymbol_,
-		__tostring, __call
-	);
-
-	LuaM_userdata_register_class(L, CMPT_SYMBOL_TNAME, LuaSymbol__fn, LuaSymbol__mt);
-
-
+	luainit_lc_lua(L);
 
 	createCmptObject(L, &(ps[psi-1]));
 	lua_setglobal(L, "AUXIL");
@@ -5079,7 +5260,10 @@ int main(int argc, char** argv) {
 					exit(0);
 				}
 			}
-			luaL_dofile(L, "C:\\lib\\packcc\\lc_lua.lua");
+			if(luaL_dofile(L, "C:\\lib\\packcc\\lc_lua.lua")){
+				fprintf(stderr, luaL_checkstring(L, -1));
+				exit(0);
+			}
 
 		}
 		
