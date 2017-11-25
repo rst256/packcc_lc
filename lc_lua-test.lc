@@ -1,26 +1,48 @@
-const long*: x=5
-short: vvv
 void*: y
-vvv=6 x=666*3+0 @x=-666
+const long*: x=-5.5
+short: vvv
+
+x=++y
+vvv=6 x=666*3+0-++y @x=-666
 do
 	long***: x
-	@ @ @ x=-666
+	@ @ @ x=-666-$vvv
 	vvv=6 x=666*3+1000
-	int: vvv
+	int: vvv = 0xff-1
 	do
 		char **:vvv
-		if x&0x0F || !y then
-			print(--x, y)
+		if x & 0x0F || (y = !y) then
+			print(--@x, @$y)
 			x=0+-9
+			int :t
 			if x=y>=0 then t=print(y) else x=999 end
 		end
 	end
 end
 short*:u
-@u=u(66, uu())
+@u=u(66, uu(), --@$u)
 const int*: i = 666*++x const int*: i2 = 666*-5
-const int*: i32 = 666*x
+const int*: i32 = 666*$x
 const char * const: str = "str value"
 int [50] *: int50_ptr
+int [50] : int50
 
 
+function f1(int*: ia)
+	@ia = 666
+	int: r = print(i)
+end
+
+function int, const char*, int :f2(int*: ia1, long[5]: ia2) 
+	@ia1 = 666
+	int: r = print(i)
+end
+
+
+function int:f3() 	end
+
+function const char*:(const char*, int, int): fx
+const function const char* :(const char*, int, int): fx_const
+const (function const char*: (const char*, int, int))*[10]: fx_const_ptr
+const function const char*: (const char*, int, int) *: fx_const_ptr2
+@fx_const_ptr2=0

@@ -13,23 +13,47 @@ function block_tostring(self)
 end
 
 print(block_tostring(p))
-local pe = p[#p]
-print(pe)
-print(pe.var)
-sym = AUXIL:scope_find(pe.var)
-print(sym, sym())
-print(sym.define_in_node:pos())
-print(sym.type_expr)
-print('scope')
-for s, ss in AUXIL:scope_pairs() do print(ss, s) end
-print('sub scope')
-for s, ss in p[7][6].auxil:scope_pairs() do print(ss, s) end
+--local pe = p[#p-6]
+--print(pe)
+--print(pe.var)
+--sym = AUXIL:scope_find(pe.var)
+--print(sym, sym())
+--print(sym.define_in_node:pos())
+--print(sym.type_expr)
+--print('scope')
+--for s, ss in AUXIL:scope_pairs() do print(ss, s) end
+
 
 print'===================================='
 i = AUXIL:scope_first()
 while i do
 	if i.define_in_node then
-		printf("%-25s %-12s  %s\n", i.define_in_node:pos(), tostring(i), tostring(i.type_expr))
+		printf("%-25s %-12s  %3d  %s\n", i.define_in_node:pos(), tostring(i), i.type_expr.sizeof, tostring(i.type_expr))
 	end
 	i = l.scope_next(i)
 end
+
+--print('sub scope')
+--i = p[#p-3].scope:scope_first()
+--while i do
+--	if i.define_in_node then
+--		printf("%-25s %-12s  %3d  %s\n",
+--			i.define_in_node:pos(), tostring(i),
+--			i.type_expr.sizeof, tostring(i.type_expr)
+--		)
+--	end
+--	i = l.scope_next(i)
+--end
+
+
+--print('auxil')
+--i = p[#p-4].body.auxil:scope_first()
+--while i do
+--	if i.define_in_node then
+--		printf("%-25s %-12s  %3d  %s\n",
+--			i.define_in_node:pos(), tostring(i),
+--			i.type_expr.sizeof, tostring(i.type_expr)
+--		)
+--	end
+--	i = l.scope_next(i)
+--end

@@ -79,8 +79,39 @@ end
 
 function pcc_action_define_1(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    self = define(e, _1, value) 
-    return self 
+    self = define(e, _1, value) return self 
+
+end
+
+function pcc_action_define_func_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    AUXIL:scope_sub() 
+
+end
+
+function pcc_action_define_func_1(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    local scope=AUXIL:clone() 
+    auxil:scope_up() 
+    return define_func{ fn=_1, args=fn_args, ret_type=rt, body=body, scope=scope }
+
+end
+
+function pcc_action_define_args_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    return asn_list({ f }, ', ', 'define_args') 
+
+end
+
+function pcc_action_define_args_1(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    table.insert(self, n) 
+
+end
+
+function pcc_action_define_arg_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    return define(t, _1) 
 
 end
 
@@ -98,7 +129,7 @@ end
 
 function pcc_action_logic_0(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    return binop(l, _1, r); 
+    return binop(larg, _1, rarg); 
 
 end
 
@@ -110,7 +141,7 @@ end
 
 function pcc_action_bitwise_0(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    return binop(l, _1, r); 
+    return binop(larg, _1, rarg); 
 
 end
 
@@ -122,7 +153,7 @@ end
 
 function pcc_action_compare_0(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    return binop(vars.l, _1, vars.r); 
+    return binop(larg, _1, rarg); 
 
 end
 
@@ -170,31 +201,31 @@ end
 
 function pcc_action_primary_0(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    return tonumber(_0) 
+    return literal(_0) 
 
 end
 
 function pcc_action_primary_1(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    return tonumber(_0) 
+    return literal(_0) 
 
 end
 
 function pcc_action_primary_2(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    return tonumber(_0) 
+    return literal(_0) 
 
 end
 
 function pcc_action_primary_3(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    return tonumber(_0) 
+    return literal(_0) 
 
 end
 
 function pcc_action_primary_4(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    return (_0) 
+    return literal(_0) 
 
 end
 
@@ -231,6 +262,29 @@ end
 function pcc_action_call_2(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
     table.insert(self.args, vars.next) 
+
+end
+
+function pcc_action__lvalue_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+
+end
+
+function pcc_action__lvalue_1(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+
+end
+
+function pcc_action__lvalue_2(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    return assert(auxil:scope_find(_0), 
+            '\n'..AUXIL:pos(_0e)..tostring(_0)..' undefined') 
+
+end
+
+function pcc_action__lvalue_3(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    return unop('@', obj)  
 
 end
 
@@ -282,15 +336,23 @@ end
 
 function pcc_action_type_primary_0(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    local sym = AUXIL:scope_find(_1)
-    if sym then assert(sym.is_type)
-            return te.primary(sym, 'const')
-    end
-    return te.primary(_1, 'const') 
+    e.qualifier='const' return e 
 
 end
 
 function pcc_action_type_primary_1(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    return e 
+
+end
+
+function pcc_action_base_type_expr_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    return e 
+
+end
+
+function pcc_action_base_type_expr_1(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
     local sym = AUXIL:scope_find(_0)
     if sym then assert(sym.is_type)
@@ -300,21 +362,27 @@ function pcc_action_type_primary_1(self, auxil, capture, vars)
 
 end
 
-function pcc_action_base_type_expr_0(self, auxil, capture, vars)
-	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    return te.primary(e, 'const') 
-
-end
-
-function pcc_action_base_type_expr_1(self, auxil, capture, vars)
-	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    return te.primary(_0) 
-
-end
-
 function pcc_action_base_type_expr_2(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
-    return e 
+    return te.primary(e) 
+
+end
+
+function pcc_action_type_func_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    return te.ftype(rt or false, fn_args or false) 
+
+end
+
+function pcc_action_type_func_args_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    return asn_list({ f }, ', ', 'type_func_args') 
+
+end
+
+function pcc_action_type_func_args_1(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    table.insert(self, n) 
 
 end
 

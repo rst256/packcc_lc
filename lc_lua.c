@@ -25,6 +25,36 @@ static size_t strnlen(const char *str, size_t maxlen) {
         static FILE* output;
 
 
+int get_line(parser_t* p, int pos){ 
+        if(p->pos < pos) return 0;
+
+
+/*	size_t begin=0, end=p->lines_count;
+
+        while (begin < end) {
+                size_t mid = (begin + end) / 2;
+                if (p->lines[i] < pos){
+                        begin = mid + 1;
+                }else if (p->lines[i] > pos){
+                        end = mid;
+                }else {
+                        return ((ch - t[mid].first) % t[mid].step) == 0;
+                }
+        }
+        */
+
+
+        for(int i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) return i+1;
+        return p->lines_count+1; 
+}
+
+int get_col(parser_t* p, int pos){ 
+        if(p->pos < pos) return 0;
+        int i;
+        for(i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) break;
+        return ( i ? pos - p->lines[i-1] : pos ) + 1; 
+}
+
 
 
 
@@ -136,19 +166,6 @@ static int CmptObject_clone(lua_State *L){
 
         luaL_setmetatable(L, CMPT_OBJECT_TNAME);
         return 1;
-}
-
-int get_line(parser_t* p, int pos){ 
-        if(p->pos < pos) return 0;
-        for(int i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) return i+1;
-        return p->lines_count+1; 
-}
-
-int get_col(parser_t* p, int pos){ 
-        if(p->pos < pos) return 0;
-        int i;
-        for(i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) break;
-        return ( i ? pos - p->lines[i-1] : pos ) + 1; 
 }
 
 static int CmptObject_pos(lua_State *L){
@@ -1710,6 +1727,229 @@ printf("`pcc_action_define_1` is not a function\n");
 #undef auxil
 }
 
+static void pcc_action_define_func_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+lua_State *L = (__pcc_ctx->auxil->L);
+lua_newtable(L);
+#define __ (*__pcc_out)
+#define rt (*__pcc_in->data.leaf.values.buf[0])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+#define _1 pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[0])
+#define _1s __pcc_in->data.leaf.capts.buf[0]->range.start
+#define _1e __pcc_in->data.leaf.capts.buf[0]->range.end
+if( lua_getglobal(L, "pcc_action_define_func_0") == LUA_TFUNCTION ){
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
+createCmptObject(L, __pcc_ctx->auxil);
+lua_newtable(L);
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));
+lua_setfield(L, -2, "_0"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);
+lua_setfield(L, -2, "_0s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
+lua_setfield(L, -2, "_0e"); 
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[0]));
+lua_setfield(L, -2, "_1"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[0]->range.start);
+lua_setfield(L, -2, "_1s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[0]->range.end);
+lua_setfield(L, -2, "_1e"); 
+lua_newtable(L);
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
+lua_setfield(L, -2, "rt"); 
+lua_call(L, 4, 1);    
+ if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
+}else{
+printf("`pcc_action_define_func_0` is not a function\n");
+ }
+
+#undef _1e
+#undef _1s
+#undef _1
+#undef _0e
+#undef _0s
+#undef _0
+#undef rt
+#undef __
+#undef auxil
+}
+
+static void pcc_action_define_func_1(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+lua_State *L = (__pcc_ctx->auxil->L);
+lua_newtable(L);
+#define __ (*__pcc_out)
+#define rt (*__pcc_in->data.leaf.values.buf[0])
+#define fn_args (*__pcc_in->data.leaf.values.buf[1])
+#define body (*__pcc_in->data.leaf.values.buf[2])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+#define _1 pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[0])
+#define _1s __pcc_in->data.leaf.capts.buf[0]->range.start
+#define _1e __pcc_in->data.leaf.capts.buf[0]->range.end
+if( lua_getglobal(L, "pcc_action_define_func_1") == LUA_TFUNCTION ){
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
+createCmptObject(L, __pcc_ctx->auxil);
+lua_newtable(L);
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));
+lua_setfield(L, -2, "_0"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);
+lua_setfield(L, -2, "_0s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
+lua_setfield(L, -2, "_0e"); 
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[0]));
+lua_setfield(L, -2, "_1"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[0]->range.start);
+lua_setfield(L, -2, "_1s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[0]->range.end);
+lua_setfield(L, -2, "_1e"); 
+lua_newtable(L);
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
+lua_setfield(L, -2, "rt"); 
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[1]));
+lua_setfield(L, -2, "fn_args"); 
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[2]));
+lua_setfield(L, -2, "body"); 
+lua_call(L, 4, 1);    
+ if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
+}else{
+printf("`pcc_action_define_func_1` is not a function\n");
+ }
+
+#undef _1e
+#undef _1s
+#undef _1
+#undef _0e
+#undef _0s
+#undef _0
+#undef body
+#undef fn_args
+#undef rt
+#undef __
+#undef auxil
+}
+
+static void pcc_action_define_args_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+lua_State *L = (__pcc_ctx->auxil->L);
+lua_newtable(L);
+#define __ (*__pcc_out)
+#define f (*__pcc_in->data.leaf.values.buf[0])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+if( lua_getglobal(L, "pcc_action_define_args_0") == LUA_TFUNCTION ){
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
+createCmptObject(L, __pcc_ctx->auxil);
+lua_newtable(L);
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));
+lua_setfield(L, -2, "_0"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);
+lua_setfield(L, -2, "_0s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
+lua_setfield(L, -2, "_0e"); 
+lua_newtable(L);
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
+lua_setfield(L, -2, "f"); 
+lua_call(L, 4, 1);    
+ if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
+}else{
+printf("`pcc_action_define_args_0` is not a function\n");
+ }
+
+#undef _0e
+#undef _0s
+#undef _0
+#undef f
+#undef __
+#undef auxil
+}
+
+static void pcc_action_define_args_1(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+lua_State *L = (__pcc_ctx->auxil->L);
+lua_newtable(L);
+#define __ (*__pcc_out)
+#define f (*__pcc_in->data.leaf.values.buf[0])
+#define n (*__pcc_in->data.leaf.values.buf[1])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+if( lua_getglobal(L, "pcc_action_define_args_1") == LUA_TFUNCTION ){
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
+createCmptObject(L, __pcc_ctx->auxil);
+lua_newtable(L);
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));
+lua_setfield(L, -2, "_0"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);
+lua_setfield(L, -2, "_0s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
+lua_setfield(L, -2, "_0e"); 
+lua_newtable(L);
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
+lua_setfield(L, -2, "f"); 
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[1]));
+lua_setfield(L, -2, "n"); 
+lua_call(L, 4, 1);    
+ if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
+}else{
+printf("`pcc_action_define_args_1` is not a function\n");
+ }
+
+#undef _0e
+#undef _0s
+#undef _0
+#undef n
+#undef f
+#undef __
+#undef auxil
+}
+
+static void pcc_action_define_arg_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+lua_State *L = (__pcc_ctx->auxil->L);
+lua_newtable(L);
+#define __ (*__pcc_out)
+#define t (*__pcc_in->data.leaf.values.buf[0])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+#define _1 pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[0])
+#define _1s __pcc_in->data.leaf.capts.buf[0]->range.start
+#define _1e __pcc_in->data.leaf.capts.buf[0]->range.end
+if( lua_getglobal(L, "pcc_action_define_arg_0") == LUA_TFUNCTION ){
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
+createCmptObject(L, __pcc_ctx->auxil);
+lua_newtable(L);
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));
+lua_setfield(L, -2, "_0"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);
+lua_setfield(L, -2, "_0s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
+lua_setfield(L, -2, "_0e"); 
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[0]));
+lua_setfield(L, -2, "_1"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[0]->range.start);
+lua_setfield(L, -2, "_1s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[0]->range.end);
+lua_setfield(L, -2, "_1e"); 
+lua_newtable(L);
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
+lua_setfield(L, -2, "t"); 
+lua_call(L, 4, 1);    
+ if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
+}else{
+printf("`pcc_action_define_arg_0` is not a function\n");
+ }
+
+#undef _1e
+#undef _1s
+#undef _1
+#undef _0e
+#undef _0s
+#undef _0
+#undef t
+#undef __
+#undef auxil
+}
+
 static void pcc_action_expression_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
 lua_State *L = (__pcc_ctx->auxil->L);
 lua_newtable(L);
@@ -1784,8 +2024,8 @@ static void pcc_action_logic_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, p
 lua_State *L = (__pcc_ctx->auxil->L);
 lua_newtable(L);
 #define __ (*__pcc_out)
-#define l (*__pcc_in->data.leaf.values.buf[0])
-#define r (*__pcc_in->data.leaf.values.buf[1])
+#define larg (*__pcc_in->data.leaf.values.buf[0])
+#define rarg (*__pcc_in->data.leaf.values.buf[1])
 #define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
 #define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
 #define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
@@ -1810,9 +2050,9 @@ lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[0]->range.end);
 lua_setfield(L, -2, "_1e"); 
 lua_newtable(L);
 lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
-lua_setfield(L, -2, "l"); 
+lua_setfield(L, -2, "larg"); 
 lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[1]));
-lua_setfield(L, -2, "r"); 
+lua_setfield(L, -2, "rarg"); 
 lua_call(L, 4, 1);    
  if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
 }else{
@@ -1825,8 +2065,8 @@ printf("`pcc_action_logic_0` is not a function\n");
 #undef _0e
 #undef _0s
 #undef _0
-#undef r
-#undef l
+#undef rarg
+#undef larg
 #undef __
 #undef auxil
 }
@@ -1870,8 +2110,8 @@ static void pcc_action_bitwise_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in,
 lua_State *L = (__pcc_ctx->auxil->L);
 lua_newtable(L);
 #define __ (*__pcc_out)
-#define l (*__pcc_in->data.leaf.values.buf[0])
-#define r (*__pcc_in->data.leaf.values.buf[1])
+#define larg (*__pcc_in->data.leaf.values.buf[0])
+#define rarg (*__pcc_in->data.leaf.values.buf[1])
 #define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
 #define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
 #define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
@@ -1896,9 +2136,9 @@ lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[0]->range.end);
 lua_setfield(L, -2, "_1e"); 
 lua_newtable(L);
 lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
-lua_setfield(L, -2, "l"); 
+lua_setfield(L, -2, "larg"); 
 lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[1]));
-lua_setfield(L, -2, "r"); 
+lua_setfield(L, -2, "rarg"); 
 lua_call(L, 4, 1);    
  if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
 }else{
@@ -1911,8 +2151,8 @@ printf("`pcc_action_bitwise_0` is not a function\n");
 #undef _0e
 #undef _0s
 #undef _0
-#undef r
-#undef l
+#undef rarg
+#undef larg
 #undef __
 #undef auxil
 }
@@ -1956,8 +2196,8 @@ static void pcc_action_compare_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in,
 lua_State *L = (__pcc_ctx->auxil->L);
 lua_newtable(L);
 #define __ (*__pcc_out)
-#define l (*__pcc_in->data.leaf.values.buf[0])
-#define r (*__pcc_in->data.leaf.values.buf[1])
+#define larg (*__pcc_in->data.leaf.values.buf[0])
+#define rarg (*__pcc_in->data.leaf.values.buf[1])
 #define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
 #define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
 #define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
@@ -1982,9 +2222,9 @@ lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[0]->range.end);
 lua_setfield(L, -2, "_1e"); 
 lua_newtable(L);
 lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
-lua_setfield(L, -2, "l"); 
+lua_setfield(L, -2, "larg"); 
 lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[1]));
-lua_setfield(L, -2, "r"); 
+lua_setfield(L, -2, "rarg"); 
 lua_call(L, 4, 1);    
  if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
 }else{
@@ -1997,8 +2237,8 @@ printf("`pcc_action_compare_0` is not a function\n");
 #undef _0e
 #undef _0s
 #undef _0
-#undef r
-#undef l
+#undef rarg
+#undef larg
 #undef __
 #undef auxil
 }
@@ -2693,6 +2933,158 @@ printf("`pcc_action_call_2` is not a function\n");
 #undef auxil
 }
 
+static void pcc_action__lvalue_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+lua_State *L = (__pcc_ctx->auxil->L);
+lua_newtable(L);
+#define __ (*__pcc_out)
+#define obj (*__pcc_in->data.leaf.values.buf[0])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+#define _1 pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[0])
+#define _1s __pcc_in->data.leaf.capts.buf[0]->range.start
+#define _1e __pcc_in->data.leaf.capts.buf[0]->range.end
+if( lua_getglobal(L, "pcc_action__lvalue_0") == LUA_TFUNCTION ){
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
+createCmptObject(L, __pcc_ctx->auxil);
+lua_newtable(L);
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));
+lua_setfield(L, -2, "_0"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);
+lua_setfield(L, -2, "_0s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
+lua_setfield(L, -2, "_0e"); 
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[0]));
+lua_setfield(L, -2, "_1"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[0]->range.start);
+lua_setfield(L, -2, "_1s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[0]->range.end);
+lua_setfield(L, -2, "_1e"); 
+lua_newtable(L);
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
+lua_setfield(L, -2, "obj"); 
+lua_call(L, 4, 1);    
+ if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
+}else{
+printf("`pcc_action__lvalue_0` is not a function\n");
+ }
+
+#undef _1e
+#undef _1s
+#undef _1
+#undef _0e
+#undef _0s
+#undef _0
+#undef obj
+#undef __
+#undef auxil
+}
+
+static void pcc_action__lvalue_1(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+lua_State *L = (__pcc_ctx->auxil->L);
+lua_newtable(L);
+#define __ (*__pcc_out)
+#define obj (*__pcc_in->data.leaf.values.buf[0])
+#define e (*__pcc_in->data.leaf.values.buf[1])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+if( lua_getglobal(L, "pcc_action__lvalue_1") == LUA_TFUNCTION ){
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
+createCmptObject(L, __pcc_ctx->auxil);
+lua_newtable(L);
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));
+lua_setfield(L, -2, "_0"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);
+lua_setfield(L, -2, "_0s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
+lua_setfield(L, -2, "_0e"); 
+lua_newtable(L);
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
+lua_setfield(L, -2, "obj"); 
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[1]));
+lua_setfield(L, -2, "e"); 
+lua_call(L, 4, 1);    
+ if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
+}else{
+printf("`pcc_action__lvalue_1` is not a function\n");
+ }
+
+#undef _0e
+#undef _0s
+#undef _0
+#undef e
+#undef obj
+#undef __
+#undef auxil
+}
+
+static void pcc_action__lvalue_2(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+lua_State *L = (__pcc_ctx->auxil->L);
+lua_newtable(L);
+#define __ (*__pcc_out)
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+if( lua_getglobal(L, "pcc_action__lvalue_2") == LUA_TFUNCTION ){
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
+createCmptObject(L, __pcc_ctx->auxil);
+lua_newtable(L);
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));
+lua_setfield(L, -2, "_0"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);
+lua_setfield(L, -2, "_0s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
+lua_setfield(L, -2, "_0e"); 
+lua_newtable(L);
+lua_call(L, 4, 1);    
+ if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
+}else{
+printf("`pcc_action__lvalue_2` is not a function\n");
+ }
+
+#undef _0e
+#undef _0s
+#undef _0
+#undef __
+#undef auxil
+}
+
+static void pcc_action__lvalue_3(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+lua_State *L = (__pcc_ctx->auxil->L);
+lua_newtable(L);
+#define __ (*__pcc_out)
+#define obj (*__pcc_in->data.leaf.values.buf[0])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+if( lua_getglobal(L, "pcc_action__lvalue_3") == LUA_TFUNCTION ){
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
+createCmptObject(L, __pcc_ctx->auxil);
+lua_newtable(L);
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));
+lua_setfield(L, -2, "_0"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);
+lua_setfield(L, -2, "_0s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
+lua_setfield(L, -2, "_0e"); 
+lua_newtable(L);
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
+lua_setfield(L, -2, "obj"); 
+lua_call(L, 4, 1);    
+ if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
+}else{
+printf("`pcc_action__lvalue_3` is not a function\n");
+ }
+
+#undef _0e
+#undef _0s
+#undef _0
+#undef obj
+#undef __
+#undef auxil
+}
+
 static void pcc_action_lvalue_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
 lua_State *L = (__pcc_ctx->auxil->L);
 lua_newtable(L);
@@ -2993,12 +3385,10 @@ static void pcc_action_type_primary_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pc
 lua_State *L = (__pcc_ctx->auxil->L);
 lua_newtable(L);
 #define __ (*__pcc_out)
+#define e (*__pcc_in->data.leaf.values.buf[0])
 #define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
 #define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
 #define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
-#define _1 pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[0])
-#define _1s __pcc_in->data.leaf.capts.buf[0]->range.start
-#define _1e __pcc_in->data.leaf.capts.buf[0]->range.end
 if( lua_getglobal(L, "pcc_action_type_primary_0") == LUA_TFUNCTION ){
 lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
 createCmptObject(L, __pcc_ctx->auxil);
@@ -3009,25 +3399,19 @@ lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);
 lua_setfield(L, -2, "_0s"); 
 lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
 lua_setfield(L, -2, "_0e"); 
-lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, __pcc_in->data.leaf.capts.buf[0]));
-lua_setfield(L, -2, "_1"); 
-lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[0]->range.start);
-lua_setfield(L, -2, "_1s"); 
-lua_pushinteger(L, __pcc_in->data.leaf.capts.buf[0]->range.end);
-lua_setfield(L, -2, "_1e"); 
 lua_newtable(L);
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
+lua_setfield(L, -2, "e"); 
 lua_call(L, 4, 1);    
  if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
 }else{
 printf("`pcc_action_type_primary_0` is not a function\n");
  }
 
-#undef _1e
-#undef _1s
-#undef _1
 #undef _0e
 #undef _0s
 #undef _0
+#undef e
 #undef __
 #undef auxil
 }
@@ -3036,6 +3420,7 @@ static void pcc_action_type_primary_1(lc_context_t *__pcc_ctx, pcc_thunk_t *__pc
 lua_State *L = (__pcc_ctx->auxil->L);
 lua_newtable(L);
 #define __ (*__pcc_out)
+#define e (*__pcc_in->data.leaf.values.buf[0])
 #define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
 #define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
 #define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
@@ -3050,6 +3435,8 @@ lua_setfield(L, -2, "_0s");
 lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
 lua_setfield(L, -2, "_0e"); 
 lua_newtable(L);
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
+lua_setfield(L, -2, "e"); 
 lua_call(L, 4, 1);    
  if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
 }else{
@@ -3059,6 +3446,7 @@ printf("`pcc_action_type_primary_1` is not a function\n");
 #undef _0e
 #undef _0s
 #undef _0
+#undef e
 #undef __
 #undef auxil
 }
@@ -3164,6 +3552,119 @@ printf("`pcc_action_base_type_expr_2` is not a function\n");
 #undef auxil
 }
 
+static void pcc_action_type_func_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+lua_State *L = (__pcc_ctx->auxil->L);
+lua_newtable(L);
+#define __ (*__pcc_out)
+#define rt (*__pcc_in->data.leaf.values.buf[0])
+#define fn_args (*__pcc_in->data.leaf.values.buf[1])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+if( lua_getglobal(L, "pcc_action_type_func_0") == LUA_TFUNCTION ){
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
+createCmptObject(L, __pcc_ctx->auxil);
+lua_newtable(L);
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));
+lua_setfield(L, -2, "_0"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);
+lua_setfield(L, -2, "_0s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
+lua_setfield(L, -2, "_0e"); 
+lua_newtable(L);
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
+lua_setfield(L, -2, "rt"); 
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[1]));
+lua_setfield(L, -2, "fn_args"); 
+lua_call(L, 4, 1);    
+ if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
+}else{
+printf("`pcc_action_type_func_0` is not a function\n");
+ }
+
+#undef _0e
+#undef _0s
+#undef _0
+#undef fn_args
+#undef rt
+#undef __
+#undef auxil
+}
+
+static void pcc_action_type_func_args_0(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+lua_State *L = (__pcc_ctx->auxil->L);
+lua_newtable(L);
+#define __ (*__pcc_out)
+#define f (*__pcc_in->data.leaf.values.buf[0])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+if( lua_getglobal(L, "pcc_action_type_func_args_0") == LUA_TFUNCTION ){
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
+createCmptObject(L, __pcc_ctx->auxil);
+lua_newtable(L);
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));
+lua_setfield(L, -2, "_0"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);
+lua_setfield(L, -2, "_0s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
+lua_setfield(L, -2, "_0e"); 
+lua_newtable(L);
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
+lua_setfield(L, -2, "f"); 
+lua_call(L, 4, 1);    
+ if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
+}else{
+printf("`pcc_action_type_func_args_0` is not a function\n");
+ }
+
+#undef _0e
+#undef _0s
+#undef _0
+#undef f
+#undef __
+#undef auxil
+}
+
+static void pcc_action_type_func_args_1(lc_context_t *__pcc_ctx, pcc_thunk_t *__pcc_in, pcc_value_t *__pcc_out) {
+lua_State *L = (__pcc_ctx->auxil->L);
+lua_newtable(L);
+#define __ (*__pcc_out)
+#define f (*__pcc_in->data.leaf.values.buf[0])
+#define n (*__pcc_in->data.leaf.values.buf[1])
+#define _0 pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0)
+#define _0s ((const)__pcc_in->data.leaf.capt0.range.start)
+#define _0e ((const)__pcc_in->data.leaf.capt0.range.end)
+if( lua_getglobal(L, "pcc_action_type_func_args_1") == LUA_TFUNCTION ){
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_out));
+createCmptObject(L, __pcc_ctx->auxil);
+lua_newtable(L);
+lua_pushstring(L, pcc_get_capture_string(__pcc_ctx, &__pcc_in->data.leaf.capt0));
+lua_setfield(L, -2, "_0"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.start);
+lua_setfield(L, -2, "_0s"); 
+lua_pushinteger(L, __pcc_in->data.leaf.capt0.range.end);
+lua_setfield(L, -2, "_0e"); 
+lua_newtable(L);
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[0]));
+lua_setfield(L, -2, "f"); 
+lua_rawgeti(L, LUA_REGISTRYINDEX, (*__pcc_in->data.leaf.values.buf[1]));
+lua_setfield(L, -2, "n"); 
+lua_call(L, 4, 1);    
+ if(!lua_isnoneornil(L, -1)) (*__pcc_out) = luaL_ref(L, LUA_REGISTRYINDEX);
+}else{
+printf("`pcc_action_type_func_args_1` is not a function\n");
+ }
+
+#undef _0e
+#undef _0s
+#undef _0
+#undef n
+#undef f
+#undef __
+#undef auxil
+}
+
 static pcc_thunk_chunk_t *pcc_evaluate_rule_stats(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_stat(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_block(lc_context_t *ctx);
@@ -3171,6 +3672,9 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule__block(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_if_then(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_assign(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_define(lc_context_t *ctx);
+static pcc_thunk_chunk_t *pcc_evaluate_rule_define_func(lc_context_t *ctx);
+static pcc_thunk_chunk_t *pcc_evaluate_rule_define_args(lc_context_t *ctx);
+static pcc_thunk_chunk_t *pcc_evaluate_rule_define_arg(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_expression(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_logic(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_bitwise(lc_context_t *ctx);
@@ -3182,10 +3686,13 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_primary(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_string(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_ident(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_call(lc_context_t *ctx);
+static pcc_thunk_chunk_t *pcc_evaluate_rule__lvalue(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_lvalue(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_type_expr(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_type_primary(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule_base_type_expr(lc_context_t *ctx);
+static pcc_thunk_chunk_t *pcc_evaluate_rule_type_func(lc_context_t *ctx);
+static pcc_thunk_chunk_t *pcc_evaluate_rule_type_func_args(lc_context_t *ctx);
 static pcc_thunk_chunk_t *pcc_evaluate_rule__(lc_context_t *ctx);
 
 static pcc_thunk_chunk_t *pcc_evaluate_rule_stats(lc_context_t *ctx) {
@@ -3232,30 +3739,35 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_stat(lc_context_t *ctx) {
     {
         int p = ctx->pos;
         int n = chunk->thunks.len;
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_if_then, &chunk->thunks, &(chunk->values.buf[0]))) goto L0002;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_define_func, &chunk->thunks, &(chunk->values.buf[0]))) goto L0002;
         goto L0001;
     L0002:;
         ctx->pos = p;
         pcc_thunk_array__revert(ctx->auxil, &chunk->thunks, n);
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_block, &chunk->thunks, &(chunk->values.buf[0]))) goto L0003;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_if_then, &chunk->thunks, &(chunk->values.buf[0]))) goto L0003;
         goto L0001;
     L0003:;
         ctx->pos = p;
         pcc_thunk_array__revert(ctx->auxil, &chunk->thunks, n);
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_assign, &chunk->thunks, &(chunk->values.buf[0]))) goto L0004;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_block, &chunk->thunks, &(chunk->values.buf[0]))) goto L0004;
         goto L0001;
     L0004:;
         ctx->pos = p;
         pcc_thunk_array__revert(ctx->auxil, &chunk->thunks, n);
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_define, &chunk->thunks, &(chunk->values.buf[0]))) goto L0005;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_assign, &chunk->thunks, &(chunk->values.buf[0]))) goto L0005;
         goto L0001;
     L0005:;
         ctx->pos = p;
         pcc_thunk_array__revert(ctx->auxil, &chunk->thunks, n);
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_call, &chunk->thunks, &(chunk->values.buf[0]))) goto L0006;
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0006;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_define, &chunk->thunks, &(chunk->values.buf[0]))) goto L0006;
         goto L0001;
     L0006:;
+        ctx->pos = p;
+        pcc_thunk_array__revert(ctx->auxil, &chunk->thunks, n);
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_call, &chunk->thunks, &(chunk->values.buf[0]))) goto L0007;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0007;
+        goto L0001;
+    L0007:;
         ctx->pos = p;
         pcc_thunk_array__revert(ctx->auxil, &chunk->thunks, n);
         goto L0000;
@@ -3461,7 +3973,7 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_assign(lc_context_t *ctx) {
     chunk->pos = ctx->pos;
     pcc_value_table__resize(ctx->auxil, &chunk->values, 2);
     pcc_capture_table__resize(ctx->auxil, &chunk->capts, 0);
-    if (!pcc_apply_rule(ctx, pcc_evaluate_rule_lvalue, &chunk->thunks, &(chunk->values.buf[0]))) goto L0000;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__lvalue, &chunk->thunks, &(chunk->values.buf[0]))) goto L0000;
     if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
     if (
         pcc_refill_buffer(ctx, 1) < 1 ||
@@ -3552,6 +4064,173 @@ L0001:;
         pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_define_1, 2, 1);
         thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
         thunk->data.leaf.values.buf[1] = &(chunk->values.buf[1]);
+        thunk->data.leaf.capts.buf[0] = &(chunk->capts.buf[0]);
+        thunk->data.leaf.capt0.range.start = chunk->pos;
+        thunk->data.leaf.capt0.range.end = ctx->pos;
+        pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+    }
+    return chunk;
+L0000:;
+    pcc_thunk_chunk__destroy(ctx->auxil, chunk);
+    return NULL;
+}
+
+static pcc_thunk_chunk_t *pcc_evaluate_rule_define_func(lc_context_t *ctx) {
+    pcc_thunk_chunk_t *chunk = pcc_thunk_chunk__create(ctx->auxil);
+    chunk->pos = ctx->pos;
+    pcc_value_table__resize(ctx->auxil, &chunk->values, 3);
+    pcc_capture_table__resize(ctx->auxil, &chunk->capts, 1);
+    {
+        const char *s = ctx->buffer.buf + ctx->pos;
+        if (
+            pcc_refill_buffer(ctx, 8) < 8 ||
+            s[0] != 'f' ||
+            s[1] != 'u' ||
+            s[2] != 'n' ||
+            s[3] != 'c' ||
+            s[4] != 't' ||
+            s[5] != 'i' ||
+            s[6] != 'o' ||
+            s[7] != 'n'
+        ) goto L0000;
+        ctx->pos += 8;
+    }
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule_type_func_args, &chunk->thunks, &(chunk->values.buf[0]))) goto L0001;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0001;
+    if (
+        pcc_refill_buffer(ctx, 1) < 1 ||
+        ctx->buffer.buf[ctx->pos] != ':'
+    ) goto L0001;
+    ctx->pos++;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0001;
+L0001:;
+    {
+        int p = ctx->pos, q;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_ident, &chunk->thunks, NULL)) goto L0000;
+        q = ctx->pos;
+        chunk->capts.buf[0].range.start = p;
+        chunk->capts.buf[0].range.end = q;
+    }
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    if (
+        pcc_refill_buffer(ctx, 1) < 1 ||
+        ctx->buffer.buf[ctx->pos] != '('
+    ) goto L0000;
+    ctx->pos++;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    {
+        pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_define_func_0, 3, 1);
+        thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
+        thunk->data.leaf.capts.buf[0] = &(chunk->capts.buf[0]);
+        thunk->data.leaf.capt0.range.start = chunk->pos;
+        thunk->data.leaf.capt0.range.end = ctx->pos;
+        pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+    }
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule_define_args, &chunk->thunks, &(chunk->values.buf[1]))) goto L0002;
+L0002:;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    if (
+        pcc_refill_buffer(ctx, 1) < 1 ||
+        ctx->buffer.buf[ctx->pos] != ')'
+    ) goto L0000;
+    ctx->pos++;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__block, &chunk->thunks, &(chunk->values.buf[2]))) goto L0003;
+L0003:;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    {
+        const char *s = ctx->buffer.buf + ctx->pos;
+        if (
+            pcc_refill_buffer(ctx, 3) < 3 ||
+            s[0] != 'e' ||
+            s[1] != 'n' ||
+            s[2] != 'd'
+        ) goto L0000;
+        ctx->pos += 3;
+    }
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    {
+        pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_define_func_1, 3, 1);
+        thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
+        thunk->data.leaf.values.buf[1] = &(chunk->values.buf[1]);
+        thunk->data.leaf.values.buf[2] = &(chunk->values.buf[2]);
+        thunk->data.leaf.capts.buf[0] = &(chunk->capts.buf[0]);
+        thunk->data.leaf.capt0.range.start = chunk->pos;
+        thunk->data.leaf.capt0.range.end = ctx->pos;
+        pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+    }
+    return chunk;
+L0000:;
+    pcc_thunk_chunk__destroy(ctx->auxil, chunk);
+    return NULL;
+}
+
+static pcc_thunk_chunk_t *pcc_evaluate_rule_define_args(lc_context_t *ctx) {
+    pcc_thunk_chunk_t *chunk = pcc_thunk_chunk__create(ctx->auxil);
+    chunk->pos = ctx->pos;
+    pcc_value_table__resize(ctx->auxil, &chunk->values, 2);
+    pcc_capture_table__resize(ctx->auxil, &chunk->capts, 0);
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule_define_arg, &chunk->thunks, &(chunk->values.buf[0]))) goto L0000;
+    {
+        pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_define_args_0, 2, 0);
+        thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
+        thunk->data.leaf.capt0.range.start = chunk->pos;
+        thunk->data.leaf.capt0.range.end = ctx->pos;
+        pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+    }
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    {
+        int i;
+        for (i = 0;; i++) {
+            if (
+                pcc_refill_buffer(ctx, 1) < 1 ||
+                ctx->buffer.buf[ctx->pos] != ','
+            ) goto L0001;
+            ctx->pos++;
+            if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0001;
+            if (!pcc_apply_rule(ctx, pcc_evaluate_rule_define_arg, &chunk->thunks, &(chunk->values.buf[1]))) goto L0001;
+            {
+                pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_define_args_1, 2, 0);
+                thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
+                thunk->data.leaf.values.buf[1] = &(chunk->values.buf[1]);
+                thunk->data.leaf.capt0.range.start = chunk->pos;
+                thunk->data.leaf.capt0.range.end = ctx->pos;
+                pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+            }
+            if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0001;
+        }
+    L0001:;
+    }
+    return chunk;
+L0000:;
+    pcc_thunk_chunk__destroy(ctx->auxil, chunk);
+    return NULL;
+}
+
+static pcc_thunk_chunk_t *pcc_evaluate_rule_define_arg(lc_context_t *ctx) {
+    pcc_thunk_chunk_t *chunk = pcc_thunk_chunk__create(ctx->auxil);
+    chunk->pos = ctx->pos;
+    pcc_value_table__resize(ctx->auxil, &chunk->values, 1);
+    pcc_capture_table__resize(ctx->auxil, &chunk->capts, 1);
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule_type_expr, &chunk->thunks, &(chunk->values.buf[0]))) goto L0000;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    if (
+        pcc_refill_buffer(ctx, 1) < 1 ||
+        ctx->buffer.buf[ctx->pos] != ':'
+    ) goto L0000;
+    ctx->pos++;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    {
+        int p = ctx->pos, q;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_ident, &chunk->thunks, NULL)) goto L0000;
+        q = ctx->pos;
+        chunk->capts.buf[0].range.start = p;
+        chunk->capts.buf[0].range.end = q;
+    }
+    {
+        pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_define_arg_0, 1, 1);
+        thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
         thunk->data.leaf.capts.buf[0] = &(chunk->capts.buf[0]);
         thunk->data.leaf.capt0.range.start = chunk->pos;
         thunk->data.leaf.capt0.range.end = ctx->pos;
@@ -4705,6 +5384,106 @@ L0000:;
     return NULL;
 }
 
+static pcc_thunk_chunk_t *pcc_evaluate_rule__lvalue(lc_context_t *ctx) {
+    pcc_thunk_chunk_t *chunk = pcc_thunk_chunk__create(ctx->auxil);
+    chunk->pos = ctx->pos;
+    pcc_value_table__resize(ctx->auxil, &chunk->values, 2);
+    pcc_capture_table__resize(ctx->auxil, &chunk->capts, 1);
+    {
+        int p = ctx->pos;
+        int n = chunk->thunks.len;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__lvalue, &chunk->thunks, &(chunk->values.buf[0]))) goto L0002;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0002;
+        if (
+            pcc_refill_buffer(ctx, 1) < 1 ||
+            ctx->buffer.buf[ctx->pos] != '.'
+        ) goto L0002;
+        ctx->pos++;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0002;
+        {
+            int p = ctx->pos, q;
+            if (!pcc_apply_rule(ctx, pcc_evaluate_rule_ident, &chunk->thunks, NULL)) goto L0002;
+            q = ctx->pos;
+            chunk->capts.buf[0].range.start = p;
+            chunk->capts.buf[0].range.end = q;
+        }
+        {
+            pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action__lvalue_0, 2, 1);
+            thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
+            thunk->data.leaf.capts.buf[0] = &(chunk->capts.buf[0]);
+            thunk->data.leaf.capt0.range.start = chunk->pos;
+            thunk->data.leaf.capt0.range.end = ctx->pos;
+            pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+        }
+        goto L0001;
+    L0002:;
+        ctx->pos = p;
+        pcc_thunk_array__revert(ctx->auxil, &chunk->thunks, n);
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__lvalue, &chunk->thunks, &(chunk->values.buf[0]))) goto L0003;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0003;
+        if (
+            pcc_refill_buffer(ctx, 1) < 1 ||
+            ctx->buffer.buf[ctx->pos] != '['
+        ) goto L0003;
+        ctx->pos++;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0003;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_expression, &chunk->thunks, &(chunk->values.buf[1]))) goto L0003;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0003;
+        if (
+            pcc_refill_buffer(ctx, 1) < 1 ||
+            ctx->buffer.buf[ctx->pos] != ']'
+        ) goto L0003;
+        ctx->pos++;
+        {
+            pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action__lvalue_1, 2, 1);
+            thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
+            thunk->data.leaf.values.buf[1] = &(chunk->values.buf[1]);
+            thunk->data.leaf.capt0.range.start = chunk->pos;
+            thunk->data.leaf.capt0.range.end = ctx->pos;
+            pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+        }
+        goto L0001;
+    L0003:;
+        ctx->pos = p;
+        pcc_thunk_array__revert(ctx->auxil, &chunk->thunks, n);
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_ident, &chunk->thunks, NULL)) goto L0004;
+        {
+            pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action__lvalue_2, 2, 1);
+            thunk->data.leaf.capt0.range.start = chunk->pos;
+            thunk->data.leaf.capt0.range.end = ctx->pos;
+            pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+        }
+        goto L0001;
+    L0004:;
+        ctx->pos = p;
+        pcc_thunk_array__revert(ctx->auxil, &chunk->thunks, n);
+        if (
+            pcc_refill_buffer(ctx, 1) < 1 ||
+            ctx->buffer.buf[ctx->pos] != '@'
+        ) goto L0005;
+        ctx->pos++;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0005;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__lvalue, &chunk->thunks, &(chunk->values.buf[0]))) goto L0005;
+        {
+            pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action__lvalue_3, 2, 1);
+            thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
+            thunk->data.leaf.capt0.range.start = chunk->pos;
+            thunk->data.leaf.capt0.range.end = ctx->pos;
+            pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+        }
+        goto L0001;
+    L0005:;
+        ctx->pos = p;
+        pcc_thunk_array__revert(ctx->auxil, &chunk->thunks, n);
+        goto L0000;
+    L0001:;
+    }
+    return chunk;
+L0000:;
+    pcc_thunk_chunk__destroy(ctx->auxil, chunk);
+    return NULL;
+}
+
 static pcc_thunk_chunk_t *pcc_evaluate_rule_lvalue(lc_context_t *ctx) {
     pcc_thunk_chunk_t *chunk = pcc_thunk_chunk__create(ctx->auxil);
     chunk->pos = ctx->pos;
@@ -4907,8 +5686,8 @@ L0000:;
 static pcc_thunk_chunk_t *pcc_evaluate_rule_type_primary(lc_context_t *ctx) {
     pcc_thunk_chunk_t *chunk = pcc_thunk_chunk__create(ctx->auxil);
     chunk->pos = ctx->pos;
-    pcc_value_table__resize(ctx->auxil, &chunk->values, 0);
-    pcc_capture_table__resize(ctx->auxil, &chunk->capts, 1);
+    pcc_value_table__resize(ctx->auxil, &chunk->values, 1);
+    pcc_capture_table__resize(ctx->auxil, &chunk->capts, 0);
     {
         int p = ctx->pos;
         int n = chunk->thunks.len;
@@ -4925,16 +5704,10 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_type_primary(lc_context_t *ctx) {
             ctx->pos += 5;
         }
         if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0002;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_base_type_expr, &chunk->thunks, &(chunk->values.buf[0]))) goto L0002;
         {
-            int p = ctx->pos, q;
-            if (!pcc_apply_rule(ctx, pcc_evaluate_rule_ident, &chunk->thunks, NULL)) goto L0002;
-            q = ctx->pos;
-            chunk->capts.buf[0].range.start = p;
-            chunk->capts.buf[0].range.end = q;
-        }
-        {
-            pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_type_primary_0, 0, 1);
-            thunk->data.leaf.capts.buf[0] = &(chunk->capts.buf[0]);
+            pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_type_primary_0, 1, 0);
+            thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
             thunk->data.leaf.capt0.range.start = chunk->pos;
             thunk->data.leaf.capt0.range.end = ctx->pos;
             pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
@@ -4943,9 +5716,10 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_type_primary(lc_context_t *ctx) {
     L0002:;
         ctx->pos = p;
         pcc_thunk_array__revert(ctx->auxil, &chunk->thunks, n);
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_ident, &chunk->thunks, NULL)) goto L0003;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_base_type_expr, &chunk->thunks, &(chunk->values.buf[0]))) goto L0003;
         {
-            pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_type_primary_1, 0, 1);
+            pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_type_primary_1, 1, 0);
+            thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
             thunk->data.leaf.capt0.range.start = chunk->pos;
             thunk->data.leaf.capt0.range.end = ctx->pos;
             pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
@@ -4971,20 +5745,7 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_base_type_expr(lc_context_t *ctx) {
     {
         int p = ctx->pos;
         int n = chunk->thunks.len;
-        {
-            const char *s = ctx->buffer.buf + ctx->pos;
-            if (
-                pcc_refill_buffer(ctx, 5) < 5 ||
-                s[0] != 'c' ||
-                s[1] != 'o' ||
-                s[2] != 'n' ||
-                s[3] != 's' ||
-                s[4] != 't'
-            ) goto L0002;
-            ctx->pos += 5;
-        }
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0002;
-        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_base_type_expr, &chunk->thunks, &(chunk->values.buf[0]))) goto L0002;
+        if (!pcc_apply_rule(ctx, pcc_evaluate_rule_type_func, &chunk->thunks, &(chunk->values.buf[0]))) goto L0002;
         {
             pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_base_type_expr_0, 1, 0);
             thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
@@ -5032,6 +5793,106 @@ static pcc_thunk_chunk_t *pcc_evaluate_rule_base_type_expr(lc_context_t *ctx) {
         ctx->pos = p;
         pcc_thunk_array__revert(ctx->auxil, &chunk->thunks, n);
         goto L0000;
+    L0001:;
+    }
+    return chunk;
+L0000:;
+    pcc_thunk_chunk__destroy(ctx->auxil, chunk);
+    return NULL;
+}
+
+static pcc_thunk_chunk_t *pcc_evaluate_rule_type_func(lc_context_t *ctx) {
+    pcc_thunk_chunk_t *chunk = pcc_thunk_chunk__create(ctx->auxil);
+    chunk->pos = ctx->pos;
+    pcc_value_table__resize(ctx->auxil, &chunk->values, 2);
+    pcc_capture_table__resize(ctx->auxil, &chunk->capts, 0);
+    {
+        const char *s = ctx->buffer.buf + ctx->pos;
+        if (
+            pcc_refill_buffer(ctx, 8) < 8 ||
+            s[0] != 'f' ||
+            s[1] != 'u' ||
+            s[2] != 'n' ||
+            s[3] != 'c' ||
+            s[4] != 't' ||
+            s[5] != 'i' ||
+            s[6] != 'o' ||
+            s[7] != 'n'
+        ) goto L0000;
+        ctx->pos += 8;
+    }
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule_type_func_args, &chunk->thunks, &(chunk->values.buf[0]))) goto L0001;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0001;
+    if (
+        pcc_refill_buffer(ctx, 1) < 1 ||
+        ctx->buffer.buf[ctx->pos] != ':'
+    ) goto L0001;
+    ctx->pos++;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0001;
+L0001:;
+    if (
+        pcc_refill_buffer(ctx, 1) < 1 ||
+        ctx->buffer.buf[ctx->pos] != '('
+    ) goto L0000;
+    ctx->pos++;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule_type_func_args, &chunk->thunks, &(chunk->values.buf[1]))) goto L0002;
+L0002:;
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    if (
+        pcc_refill_buffer(ctx, 1) < 1 ||
+        ctx->buffer.buf[ctx->pos] != ')'
+    ) goto L0000;
+    ctx->pos++;
+    {
+        pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_type_func_0, 2, 0);
+        thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
+        thunk->data.leaf.values.buf[1] = &(chunk->values.buf[1]);
+        thunk->data.leaf.capt0.range.start = chunk->pos;
+        thunk->data.leaf.capt0.range.end = ctx->pos;
+        pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+    }
+    return chunk;
+L0000:;
+    pcc_thunk_chunk__destroy(ctx->auxil, chunk);
+    return NULL;
+}
+
+static pcc_thunk_chunk_t *pcc_evaluate_rule_type_func_args(lc_context_t *ctx) {
+    pcc_thunk_chunk_t *chunk = pcc_thunk_chunk__create(ctx->auxil);
+    chunk->pos = ctx->pos;
+    pcc_value_table__resize(ctx->auxil, &chunk->values, 2);
+    pcc_capture_table__resize(ctx->auxil, &chunk->capts, 0);
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule_type_expr, &chunk->thunks, &(chunk->values.buf[0]))) goto L0000;
+    {
+        pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_type_func_args_0, 2, 0);
+        thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
+        thunk->data.leaf.capt0.range.start = chunk->pos;
+        thunk->data.leaf.capt0.range.end = ctx->pos;
+        pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+    }
+    if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0000;
+    {
+        int i;
+        for (i = 0;; i++) {
+            if (
+                pcc_refill_buffer(ctx, 1) < 1 ||
+                ctx->buffer.buf[ctx->pos] != ','
+            ) goto L0001;
+            ctx->pos++;
+            if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0001;
+            if (!pcc_apply_rule(ctx, pcc_evaluate_rule_type_expr, &chunk->thunks, &(chunk->values.buf[1]))) goto L0001;
+            {
+                pcc_thunk_t *thunk = pcc_thunk__create_leaf(ctx->auxil, pcc_action_type_func_args_1, 2, 0);
+                thunk->data.leaf.values.buf[0] = &(chunk->values.buf[0]);
+                thunk->data.leaf.values.buf[1] = &(chunk->values.buf[1]);
+                thunk->data.leaf.capt0.range.start = chunk->pos;
+                thunk->data.leaf.capt0.range.end = ctx->pos;
+                pcc_thunk_array__add(ctx->auxil, &chunk->thunks, thunk);
+            }
+            if (!pcc_apply_rule(ctx, pcc_evaluate_rule__, &chunk->thunks, NULL)) goto L0001;
+        }
     L0001:;
     }
     return chunk;

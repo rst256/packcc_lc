@@ -41,6 +41,36 @@
 	static FILE* output;
 
 
+int get_line(parser_t* p, int pos){ 
+	if(p->pos < pos) return 0;
+
+
+/*	size_t begin=0, end=p->lines_count;
+	
+	while (begin < end) {
+		size_t mid = (begin + end) / 2;
+		if (p->lines[i] < pos){
+			begin = mid + 1;
+		}else if (p->lines[i] > pos){
+			end = mid;
+		}else {
+			return ((ch - t[mid].first) % t[mid].step) == 0;
+		}
+	}
+	*/
+
+
+	for(int i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) return i+1;
+	return p->lines_count+1; 
+}
+
+int get_col(parser_t* p, int pos){ 
+	if(p->pos < pos) return 0;
+	int i;
+	for(i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) break;
+	return ( i ? pos - p->lines[i-1] : pos ) + 1; 
+}
+
 
 
 
@@ -152,19 +182,6 @@ static int CmptObject_clone(lua_State *L){
 	
 	luaL_setmetatable(L, CMPT_OBJECT_TNAME);
 	return 1;
-}
-
-int get_line(parser_t* p, int pos){ 
-	if(p->pos < pos) return 0;
-	for(int i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) return i+1;
-	return p->lines_count+1; 
-}
-
-int get_col(parser_t* p, int pos){ 
-	if(p->pos < pos) return 0;
-	int i;
-	for(i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) break;
-	return ( i ? pos - p->lines[i-1] : pos ) + 1; 
 }
 
 static int CmptObject_pos(lua_State *L){
@@ -360,7 +377,7 @@ stats <-
 	( e:stat { table.insert(self, e) --print(auxil:pos(e.s), e) } )+
 
 stat <-  
-	( e:if_then / e:block / e:assign / e:define / e:call _ ) { e.s=_0s e.e=_0e return e }
+	( e:define_func / e:if_then / e:block / e:assign / e:define / e:call _ ) { e.s=_0s e.e=_0e return e }
 
 block <-
 	'do' { auxil:scope_sub() return block(auxil:clone(), 'do', 'end') } _ ( e:stat { table.insert(self, e) } )+ _ 'end' _ { auxil:scope_up() } _
@@ -376,7 +393,7 @@ if_then <-
 
 
 assign <-  
-	var:lvalue _ '=' _ 
+	var:_lvalue _ '=' _ 
 		value:expression ~{ print('error expr') } _ { 
 self = assign(var, value) 
 return self }
@@ -384,9 +401,27 @@ return self }
 
 define <-  
 	e:type_expr _ ':' _ < ident > _ ( '=' _ 
-		value:expression ~{ print('error expr') } _ )? { 
-self = define(e, $1, value) 
-return self }
+		value:expression ~{ print('error expr') } _ )? { self = define(e, $1, value) return self }
+
+
+define_func <-  
+	'function' _ ( rt:type_func_args _ ':' _ )?  < ident > _ '(' _  { AUXIL:scope_sub() }
+	fn_args:define_args? _ ')' _ body:_block? _ 'end' _   
+		{ 
+			local scope=AUXIL:clone() 
+			auxil:scope_up() 
+			return define_func{ fn=$1, args=fn_args, ret_type=rt, body=body, scope=scope }
+		}
+
+
+
+define_args <-
+ f:define_arg { return asn_list({ f }, ', ', 'define_args') }
+	_ ( ',' _ n:define_arg { table.insert(self, n) } _ )* 
+
+define_arg <-
+	t:type_expr _ ':' _ < ident > { return define(t, $1) }
+
 
 
 ########$ expression 
@@ -397,17 +432,17 @@ expression <-
 
 
 logic <- 	
-	l:logic _ < '&&' / '||' / '^^' > _ r:bitwise   { return binop(l, $1, r); }
+	larg:logic _ < '&&' / '||' / '^^' > _ rarg:bitwise   { return binop(larg, $1, rarg); }
 	/ e:bitwise                  { return e }
 
 
 bitwise <- 	
-	l:bitwise _ < '&' / '|' / '^' > _ r:compare   { return binop(l, $1, r); }
+	larg:bitwise _ < '&' / '|' / '^' > _ rarg:compare   { return binop(larg, $1, rarg); }
 	/ e:compare                  { return e }
 
 
 compare <- 	
-	l:compare _ < '<=' / '>=' / '<' / '>' / '==' / '!=' > _ r:term   { return binop(vars.l, $1, vars.r); }
+	larg:compare _ < '<=' / '>=' / '<' / '>' / '==' / '!=' > _ rarg:term   { return binop(larg, $1, rarg); }
 	/ e:term                  { return e }
 
 
@@ -427,11 +462,11 @@ unop <-
 
 
 primary <- 
-	( '.' [0-9]+ ( 'e' [-+]? [0-9]+ )?   )      { return tonumber($0) }
-	/ ( '0x' < [0-9a-fA-F]+ >  )       { return tonumber($0) }     
-	/ [0-9]+ ( '.' [0-9]+ )? ( 'e' [-+]? [0-9]+ )? { return tonumber($0) }  
-	/  ( [0-9]+ )             { return tonumber($0) }
-	/ '"' < string > '"'  		{ return ($0) }
+	( '.' [0-9]+ ( 'e' [-+]? [0-9]+ )?   )      { return literal($0) }
+	/ ( '0x' < [0-9a-fA-F]+ >  )       { return literal($0) }     
+	/ [0-9]+ ( '.' [0-9]+ )? ( 'e' [-+]? [0-9]+ )? { return literal($0) }  
+	/  ( [0-9]+ )             { return literal($0) }
+	/ '"' < string > '"'  		{ return literal($0) }
 	/ e:call 			{ return e }
 	/ e:lvalue   
 		{ return assert(auxil:scope_find(e), '\n'..AUXIL:pos(_0e)..tostring(e)..' undefined') }   
@@ -455,6 +490,14 @@ call <-
 	')'   
 
 
+_lvalue <- 
+	obj:_lvalue _ '.' _ < ident > {  }
+	/ obj:_lvalue _ '[' _ e:expression _ ']' {  }
+	/ ident  { 
+		return assert(auxil:scope_find($0), 
+			'\n'..AUXIL:pos(_0e)..tostring($0)..' undefined') }
+	/ '@' _ obj:_lvalue { return unop('@', obj)  }
+
 
 lvalue <- 
 	obj:lvalue _ '.' _ < ident > {  }
@@ -471,28 +514,32 @@ type_expr <-
 	/ e:type_primary  { return e }
 
 type_primary <-
-	'const' _ < ident > { 
-local sym = AUXIL:scope_find($1)
-if sym then assert(sym.is_type)
-	return te.primary(sym, 'const')
-end
-return te.primary($1, 'const') }
-	/ ident  { 
-local sym = AUXIL:scope_find($0)
-if sym then assert(sym.is_type)
-	return te.primary(sym)
-end
-return te.primary($0) }
+	'const' _ e:base_type_expr { e.qualifier='const' return e }
+	/ e:base_type_expr { return e }
 
 
 base_type_expr <-
-	# 'struct' _ < ident > _ '{' _ '}' { return type_expr($1) }
-	# / 'struct' _ '{' _ '}'  { return type_expr('struct') }
-	# / 'struct' _ < ident >  { return type_expr($2) }
-	'const' _ e:base_type_expr  { return te.primary(e, 'const') }
-	/ ident  { return te.primary($0) }
-	/ '(' _ e:type_expr _ ')' { return e }
+	e:type_func { return e }
+	/ ident  { 
+				local sym = AUXIL:scope_find($0)
+				if sym then assert(sym.is_type)
+					return te.primary(sym)
+				end
+				return te.primary($0) 
+			}
+	/ '(' _ e:type_expr _ ')' { return te.primary(e) }
 	
+type_func <-  
+	'function' _ ( rt:type_func_args _ ':' _ )? '(' _ fn_args:type_func_args? _ ')'   
+		{ return te.ftype(rt or false, fn_args or false) }
+
+
+type_func_args <-
+ 	f:type_expr { return asn_list({ f }, ', ', 'type_func_args') }
+	_ ( ',' _ n:type_expr { table.insert(self, n) } _ )* 
+
+
+
 
 # access_modifiers <-
 # 	'public'
