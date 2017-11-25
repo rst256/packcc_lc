@@ -57,3 +57,5 @@ end
 --	end
 --	i = l.scope_next(i)
 --end
+
+--AUXIL:get_line_test()

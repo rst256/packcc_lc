@@ -1843,6 +1843,16 @@ static void dump_options(context_t *ctx) {
     fprintf(stdout, "prefix:'%s'\n", get_prefix(ctx));
 }
 
+const char * escape_file_path(const char *fname){
+	static char ibuff[1024];
+	char c, *b=ibuff;
+const char *i=fname;
+	for(; c=*i++; *b++ = c)
+	if(c=='\\') *b++ = c;
+	*b = '\0';
+	return ibuff;
+}
+
 static bool_t parse_directive_include_(context_t *ctx, const char *name, FILE *output1, FILE *output2) {
     int l = ctx->linenum;
     int m = ctx->bufpos - ctx->linepos;
@@ -1854,8 +1864,9 @@ static bool_t parse_directive_include_(context_t *ctx, const char *name, FILE *o
             int q = ctx->bufpos;
             match_spaces(ctx);
             if (output1 != NULL) {
+					 fprintf(output1, "\n#line %d \"%s\"\n", l+2, escape_file_path(ctx->iname));
                 write_code_block(output1, ctx->buffer.buf + p + 1, q - p - 2, 0);
-                fputc('\n', output1);
+                fputs("\n#line\n", output1);
             }
             if (output2 != NULL) {
                 write_code_block(output2, ctx->buffer.buf + p + 1, q - p - 2, 0);

@@ -3,12 +3,56 @@
 #ifndef PCC_INCLUDED__LC_LUA_H
 #define PCC_INCLUDED__LC_LUA_H
 
+
+#line 6 "C:\\lib\\packcc\\lc_lua.cc"
         char * strdup(const char *);
         #include <string.h>
         #include <stdio.h>
         #include <stdlib.h>
         #include <getopt.h>
 
+
+typedef int item_t;
+inline size_t half_div_search(item_t t[], size_t size, item_t ch);
+inline size_t half_div_search2(item_t t[], size_t size, item_t ch);
+size_t half_div_search(item_t t[], size_t size, item_t ch){
+        size_t begin=0, end=size;
+
+        while (begin < end) {
+                size_t mid = (begin + end) / 2;
+                item_t c = t[mid];
+                if ( c < ch ){
+                        begin = mid + 1;
+                }else if ( c > ch ){
+                        if(mid==0 || t[mid-1] < ch) return mid;
+                        end = mid;
+                }else {
+                        return mid+1;
+                }
+        }
+
+        return 0;
+}
+
+size_t half_div_search2(item_t t[], size_t size, item_t ch){
+        size_t begin=0, end=size;
+        size_t mid = size * ch / t[end-1];
+
+        while (begin < end) {
+                item_t c = t[mid];
+                if ( c < ch ){
+                        begin = mid + 1;
+                }else if ( c > ch ){
+                        if(mid==0 || t[mid-1] < ch) return mid;
+                        end = mid;
+                }else {
+                        return mid+1;
+                }
+                mid = (begin + end) / 2;
+        }
+
+        return 0;
+}
 
 #define table_size(t) (sizeof(t)/sizeof((t)[0]))
 
@@ -38,6 +82,7 @@
     #define PCC_GETCHAR(auxil) pcc_getchar(auxil)
 
 
+#line 86 "C:\\lib\\packcc\\lc_lua.h"
 #ifdef __cplusplus
 extern "C" {
 #endif

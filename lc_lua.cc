@@ -10,6 +10,48 @@
 	#include <getopt.h>
 
 
+typedef int item_t;
+inline size_t half_div_search(item_t t[], size_t size, item_t ch);
+inline size_t half_div_search2(item_t t[], size_t size, item_t ch);
+size_t half_div_search(item_t t[], size_t size, item_t ch){
+	size_t begin=0, end=size;
+
+	while (begin < end) {
+		size_t mid = (begin + end) / 2;
+		item_t c = t[mid];
+		if ( c < ch ){
+			begin = mid + 1;
+		}else if ( c > ch ){
+			if(mid==0 || t[mid-1] < ch) return mid;
+			end = mid;
+		}else {
+			return mid+1;
+		}
+	}
+
+	return 0;
+}
+
+size_t half_div_search2(item_t t[], size_t size, item_t ch){
+	size_t begin=0, end=size;
+	size_t mid = size * ch / t[end-1];
+
+	while (begin < end) {
+		item_t c = t[mid];
+		if ( c < ch ){
+			begin = mid + 1;
+		}else if ( c > ch ){
+			if(mid==0 || t[mid-1] < ch) return mid;
+			end = mid;
+		}else {
+			return mid+1;
+		}
+		mid = (begin + end) / 2;
+	}
+
+	return 0;
+}
+
 #define table_size(t) (sizeof(t)/sizeof((t)[0]))
 
 	#include "scope.h"
@@ -44,40 +86,44 @@
 	static FILE* output;
 
 
-typedef int item_t;
-size_t half_div_search(item_t t[], size_t size, item_t ch){
-	size_t begin=0, end=size;
-
-	while (begin < end) {
-		size_t mid = (begin + end) / 2;
-		item_t c = t[mid];
-		if ( c < ch ){
-			begin = mid + 1;
-		}else if ( c > ch ){
-			if(mid==0 || t[mid-1] < ch) return mid;
-			end = mid;
-		}else {
-			return mid+1;
-		}
-	}
-
-	return 0;
-}
-
 
 
 int get_line(parser_t* p, int pos){ 
 	if(p->pos < pos) return 0;
-
-	//for(int i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) return i+1;
-	return half_div_search(p->lines, p->lines_count, pos)+1;
-//p->lines_count+1; 
+	for(int i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) return i+1;
+	return p->lines_count+1; 
 }
+
+/*
+int get_line2(parser_t* p, int ch){ 
+	if(p->pos < ch) return 0;
+	size_t begin=0, end=p->lines_count;
+
+	while (begin < end) {
+		size_t mid = (begin + end) / 2;
+		item_t c = p->lines[mid];
+		if ( c < ch ){
+			begin = mid + 1;
+		}else if ( c > ch ){
+			if(mid==0 || p->lines[mid-1] < ch) return mid+1;
+			end = mid;
+		}else {
+			return mid+2;
+		}
+	}
+	return 0;
+}
+
+
+int get_line3(parser_t* p, int pos){ 
+	if(p->pos < pos) return 0;
+	return half_div_search(p->lines, p->lines_count, pos)+1;
+}
+*/
 
 int get_col(parser_t* p, int pos){ 
 	if(p->pos < pos) return 0;
-	int line = half_div_search(p->lines, p->lines_count, pos);
-	//for(i = 0; i<p->lines_count; i++) if(p->lines[i] > pos) break;
+	int line = half_div_search2(p->lines, p->lines_count, pos);
 	return ( line  ? pos - p->lines[line-1] : pos ) + 1; 
 }
 
@@ -226,6 +272,42 @@ static int CmptObject_get_line(lua_State *L){
 	lua_pushinteger(L, get_line(p, luaL_optinteger(L, 2, p->pos)));
 	return 1;
 }
+/*
+#include <time.h>
+#define be_loop for(int i=0, ps=0; i<1000000; i++, ps=ps<p->lines_count ? ps+1 : 0)
+static int CmptObject_get_line_test(lua_State *L){
+	parser_t* p = *check_auxil(L, 1);
+	time_t t0, t;
+	t0 = clock();
+	int l;
+	be_loop l = get_line(p, 22);
+	t = clock();
+	printf("get1 pos 22: %ld [%d]\n", t-t0, l);
+	t0 = clock();
+	be_loop l = get_line2(p, 22);
+	t = clock();
+	printf("get2 pos 22: %ld [%d]\n", t-t0, l);
+	t0 = clock();
+	be_loop l = get_line(p, 220);
+	t = clock();
+	printf("get1 pos 220: %ld [%d]\n", t-t0, l);
+	t0 = clock();
+	be_loop l = get_line2(p, 220);
+	t = clock();
+	printf("get2 pos 220: %ld [%d]\n", t-t0, l);
+
+	t0 = clock();
+	be_loop l = get_line(p, ps);
+	t = clock();
+	printf("get pos ~: %ld [%d]\n", t-t0, l);
+	t0 = clock();
+	be_loop l = get_line2(p, ps);
+	t = clock();
+	printf("get2 pos ~: %ld [%d]\n", t-t0, l);
+
+	return 0;
+}
+*/
 
 static int CmptObject_get_col(lua_State *L){
 	parser_t* p = *check_auxil(L, 1);
@@ -475,7 +557,6 @@ static int Cmpt_parse_file(lua_State *L){
 
 	return 1;
 }
-
 
 	#define  OUT(...) fprintf(output, __VA_ARGS__)
 
@@ -774,7 +855,7 @@ void luainit_lc_lua(lua_State *L) {
    static luaL_Reg LuaLexer__fn[] = newluaL_Reg(CmptObject_,
    	clone, pos, get_line, get_col, get_file, get_ctx, get_ident, get_level,
 		scope_sub, scope_up, scope_find, scope_add, 
-		scope_pairs, scope_first 
+		scope_pairs, scope_first
    );
 	static luaL_Reg LuaLexer__mt[]= newluaL_Reg(CmptObject_,
 		__tostring, __gc
