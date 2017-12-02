@@ -82,8 +82,6 @@ static size_t strnlen(const char *str, size_t maxlen) {
 #define ARRAY_INIT_SIZE 2
 #endif
 
-#define get_character_any(CTX) ( match_character_any(CTX) ? (CTX)->buffer.buf[(CTX)->bufpos - 1] : 0 )
-
 typedef enum bool_tag {
     FALSE = 0,
     TRUE
@@ -108,7 +106,6 @@ typedef enum node_type_tag {
     NODE_EXPAND,
     NODE_ACTION,
     NODE_ERROR,
-    NODE_CUSTOM,
 } node_type_t;
 
 typedef struct node_tag node_t;
@@ -1826,54 +1823,15 @@ static node_t *parse_rule(context_t *ctx) {
     if (!match_identifier(ctx)) goto EXCEPTION;
     q = ctx->bufpos;
     match_spaces(ctx);
-    if (!match_character(ctx, '<')) goto EXCEPTION;
-	switch (get_character_any(ctx)){
-	  case '-':
-	    match_spaces(ctx);
-	    n_r = create_node(NODE_RULE);
-	    n_r->data.rule.expr = parse_expression(ctx, n_r);
-	    if (n_r->data.rule.expr == NULL) goto EXCEPTION;
-	    n_r->data.rule.name = strndup_e(ctx->buffer.buf + p, q - p);
-	    n_r->data.rule.line = l;
-	    n_r->data.rule.col = m;
-	    return n_r;
-	  case '=':
-		printf("<=\n");
-	    match_spaces(ctx);
-	    n_r = create_node(NODE_RULE);
-	    n_r->data.rule.expr = parse_expression(ctx, n_r);
-	    if (n_r->data.rule.expr == NULL) goto EXCEPTION;
-	    n_r->data.rule.name = strndup_e(ctx->buffer.buf + p, q - p);
-	    n_r->data.rule.line = l;
-	    n_r->data.rule.col = m;
-	    return n_r;
-	    match_spaces(ctx);
-	    n_r = create_node(NODE_RULE);
-		// {
-		//     int p = ctx->bufpos;
-		//     int l = ctx->linenum;
-		//     int m = ctx->bufpos - ctx->linepos;
-		//     node_t *n_p2 = NULL;
-		// 	if (match_code_block(ctx)) {
-		// 		int q = ctx->bufpos;
-		// 		match_spaces(ctx);
-		// 		n_p2 = create_node(NODE_ACTION);
-		// 		n_p2->data.action.value = strndup_e(ctx->buffer.buf + p + 1, q - p - 2);
-		// 		n_p2->data.action.index = n_r->data.rule.codes.len;
-		// 		node_const_array__add(&n_r->data.rule.codes, n_p2);
-		// 	}
-		// }
-			    n_r->data.rule.expr = parse_primary(ctx, n_r);
-	    if (n_r->data.rule.expr == NULL) goto EXCEPTION;
-	    n_r->data.rule.name = strndup_e(ctx->buffer.buf + p, q - p);
-	    n_r->data.rule.line = l;
-	    n_r->data.rule.col = m;
-	    return n_r;
-	    
-	    break;
-	  default:
-	     goto EXCEPTION;
-	}
+    if (!match_string(ctx, "<-")) goto EXCEPTION;
+    match_spaces(ctx);
+    n_r = create_node(NODE_RULE);
+    n_r->data.rule.expr = parse_expression(ctx, n_r);
+    if (n_r->data.rule.expr == NULL) goto EXCEPTION;
+    n_r->data.rule.name = strndup_e(ctx->buffer.buf + p, q - p);
+    n_r->data.rule.line = l;
+    n_r->data.rule.col = m;
+    return n_r;
 
 EXCEPTION:;
     destroy_node(n_r);
@@ -1936,55 +1894,6 @@ static bool_t parse_directive_include_(context_t *ctx, const char *name, FILE *o
             ctx->errnum++;
         }
     }
-    return TRUE;
-}
-
-static bool_t parse_directive_function_(context_t *ctx, const char *name, FILE *output1, FILE *output2) {
-    int p = ctx->bufpos, q;
-	int l = ctx->linenum;
-    int m = ctx->bufpos - ctx->linepos;
-    if (!match_string(ctx, name)) return FALSE;
-    match_spaces(ctx);
-	q = ctx->bufpos;
-    if (!match_identifier(ctx)) return FALSE;
-	char* nm = strndup_e(ctx->buffer.buf + q, ctx->bufpos - q);
-    match_spaces(ctx);
-    // {
-    //     int p = ctx->bufpos;
-    //     if (match_code_block(ctx)) {
-    //         int q = ctx->bufpos;
-    //         match_spaces(ctx);
-	    node_t *n_r = create_node(NODE_RULE);
-	    n_r->data.rule.expr = parse_primary(ctx, n_r);
-	    // if (n_r->data.rule.expr == NULL) goto EXCEPTION;
-	    n_r->data.rule.name = nm;
-	    n_r->data.rule.line = l;
-	    n_r->data.rule.col = m;
-
-		node_array__add(&ctx->rules, n_r);
-            if (output1 != NULL) {
-// 					 fprintf(output1, "\n#line %d \"%s\"\n", l+2, escape_file_path(ctx->iname));
-//  fprintf(output1, 
-// "static pcc_thunk_chunk_t *pcc_evaluate_rule_%s(lc_context_t *ctx) {\n"
-// "    pcc_thunk_chunk_t *chunk = pcc_thunk_chunk__create(ctx->auxil);\n"
-// "    chunk->pos = ctx->pos;\n"
-// "    pcc_value_table__resize(ctx->auxil, &chunk->values, 3);\n"
-// "    pcc_capture_table__resize(ctx->auxil, &chunk->capts, 0);\n"
-// "    {\n", nm);
-//                 write_code_block(output1, ctx->buffer.buf + p + 1, q - p - 2, 0);
-//                 fputs("\n#line\n", output1);
-// fprintf(output1, "\n}\n");
-            }
-            if (output2 != NULL) {
-                write_code_block(output2, ctx->buffer.buf + p + 1, q - p - 2, 0);
-                fputc('\n', output2);
-            }
-        // }
-    //     else {
-    //         print_error("%s:%d:%d: Illegal syntax\n", ctx->iname, l + 1, m + 1, name);
-    //         ctx->errnum++;
-    //     }
-    // }
     return TRUE;
 }
 
@@ -2103,12 +2012,12 @@ static bool_t parse(context_t *ctx) {
             l = ctx->linenum;
             m = ctx->bufpos - ctx->linepos;
             if (
-                parse_directive_function_(ctx, "%rule", ctx->sfile, NULL) ||
                 parse_directive_include_(ctx, "%source", ctx->sfile, NULL) ||
                 parse_directive_include_(ctx, "%header", ctx->hfile, NULL) ||
                 parse_directive_include_(ctx, "%common", ctx->sfile, ctx->hfile) ||
                 parse_directive_string_(ctx, "%value", &ctx->vtype, STRING_FLAG__NOTEMPTY | STRING_FLAG__NOTVOID) ||
-                parse_directive_string_(ctx, "%auxil", &ctx->atype, STRING_FLAG__NOTEMPTY | STRING_FLAG__NOTVOID) ||
+                parse_directive_string_(ctx, "%include", &ctx->vtype, STRING_FLAG__NOTEMPTY | STRING_FLAG__NOTVOID) ||
+               parse_directive_string_(ctx, "%auxil", &ctx->atype, STRING_FLAG__NOTEMPTY | STRING_FLAG__NOTVOID) ||
                 parse_directive_string_(ctx, "%prefix", &ctx->prefix, STRING_FLAG__NOTEMPTY | STRING_FLAG__IDENTIFIER)
             ) {
                 b = TRUE;

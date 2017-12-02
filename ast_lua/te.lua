@@ -66,22 +66,30 @@ end
 
 function primary_mt:__tostring()
 	local s = ( self.qualifier~=nil and tostring(self.qualifier)..' ' or '')
-	if self.base_type.is_scalar then 
+	if self.base_type.is_scalar then
 		s = s..tostring(self.base_type)
 	else
-		s = s..'('..tostring(self.base_type)..')' 		
+		s = s..'('..tostring(self.base_type)..')'
 	end
 	return s
 end
+
+-- function primary_mt:__eq(v)
+-- 	if getmetatable(v)==primary_mt then return self.base_type==v or self.base_type==v.base_type end
+-- 	return self.base_type==v
+-- end
 
 function pointer_mt:__tostring()
 	local s = tostring(self.base_type)
 	s = s..'*'
 	if self.qualifier then s = s..' '..tostring(self.qualifier) end
 	return s
-	-- if self.qualifier then return ' '..tostring(self.qualifier)..'*' end
-	-- return '*'
 end
+
+-- function pointer_mt:__eq(v)
+-- 	if getmetatable(v)==pointer_mt then return self.base_type==v.base_type end
+-- 	return self==v.base_type
+-- end
 
 function array_mt:__tostring()
 	local s = tostring(self.base_type)
@@ -89,6 +97,11 @@ function array_mt:__tostring()
 	s = s..'['..tostring(self.dim)..']'
 	return s
 end
+
+-- function array_mt:__eq(v)
+-- 	if getmetatable(v)~=array_mt then return false end
+-- 	return self.base_type==v.base_type -- and self.dim==v.dim
+-- end
 
 function ftype_mt:__tostring()
 	local s = ( self.qualifier~=nil and tostring(self.qualifier)..' ' or '')..
@@ -108,5 +121,25 @@ end
 -- print(M.primary('int', 'const')..' 666')
 -- print(M.pointer('int', 'const')..' 666')
 
+local function typeresolve(a)
+	if getmetatable(a)==primary_mt then return typeresolve(a.base_type) end
+	return a
+end
+
+function M.typeeq(a, b)
+	local a, b = typeresolve(a), typeresolve(b)
+	if a==b then return true end
+	if a.base_type==nil and b.base_type==nil then
+		return tostring(a)==tostring(b)
+	end
+	if getmetatable(a)==getmetatable(b) then
+--		print(typeresolve(a.base_type).base_type==type_int, typeresolve(b.base_type).base_type==type_int )
+		return M.typeeq(
+			typeresolve(a.base_type),
+			typeresolve(b.base_type)
+		)
+	end
+	return false
+end
 
 return M

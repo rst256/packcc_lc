@@ -181,9 +181,6 @@ static int CmptSymbol___call(lua_State *L){
 	symbol_t** self = luaL_checkudata(L, 1, CMPT_SYMBOL_TNAME);
 	if (!self || !(*self)) 
 		luaL_error(L, "userdata '%s' object has been freed", CMPT_SYMBOL_TNAME);
-	if( !lua_isnoneornil(L, 2)){
-		symbol_setdata(*self, luaL_ref(L, LUA_REGISTRYINDEX));
-	}
 	lua_rawgeti(L, LUA_REGISTRYINDEX, symbol_data(*self));
 	return 1;
 }
@@ -209,6 +206,15 @@ static int CmptSymbol___newindex(lua_State *L){
 	return 0;
 }
 
+/*
+#define LUA_USERDATA_PTR(TYPE, ) luaL_checkudata(L, i, CMPT_OBJECT_TNAME);
+static parser_t**  check_auxil(lua_State *L, int i){
+	parser_t** ts = luaL_checkudata(L, i, CMPT_OBJECT_TNAME);
+	if (ts == NULL || *ts == NULL ) 
+		luaL_error(L, "userdata '%s' object has been freed", CMPT_OBJECT_TNAME);
+	return ts;
+}
+*/
 
 #define CMPT_OBJECT_TNAME "parser_auxil"
 
@@ -218,6 +224,19 @@ static parser_t**  check_auxil(lua_State *L, int i){
 		luaL_error(L, "userdata '%s' object has been freed", CMPT_OBJECT_TNAME);
 	return ts;
 }
+/*
+static scope_t* check_scope(lua_State *L, int i){
+	if(luaL_testudata(L, i, CMPT_OBJECT_TNAME)){
+		return *check_auxil(L, i)->scope;
+	}else{
+
+	}
+	scope_t** ts = luaL_checkudata(L, i, CMPT_SCOPE_TNAME);
+	if (ts == NULL || *ts == NULL ) 
+		luaL_error(L, "userdata '%s' object has been freed", CMPT_OBJECT_TNAME);
+	return *ts;
+}
+*/
 
 static int createCmptObject(lua_State *L, parser_t* parser){
 	parser_t** obj = lua_newuserdata(L, sizeof(parser_t*));
@@ -253,6 +272,42 @@ static int CmptObject_get_line(lua_State *L){
 	lua_pushinteger(L, get_line(p, luaL_optinteger(L, 2, p->pos)));
 	return 1;
 }
+/*
+#include <time.h>
+#define be_loop for(int i=0, ps=0; i<1000000; i++, ps=ps<p->lines_count ? ps+1 : 0)
+static int CmptObject_get_line_test(lua_State *L){
+	parser_t* p = *check_auxil(L, 1);
+	time_t t0, t;
+	t0 = clock();
+	int l;
+	be_loop l = get_line(p, 22);
+	t = clock();
+	printf("get1 pos 22: %ld [%d]\n", t-t0, l);
+	t0 = clock();
+	be_loop l = get_line2(p, 22);
+	t = clock();
+	printf("get2 pos 22: %ld [%d]\n", t-t0, l);
+	t0 = clock();
+	be_loop l = get_line(p, 220);
+	t = clock();
+	printf("get1 pos 220: %ld [%d]\n", t-t0, l);
+	t0 = clock();
+	be_loop l = get_line2(p, 220);
+	t = clock();
+	printf("get2 pos 220: %ld [%d]\n", t-t0, l);
+
+	t0 = clock();
+	be_loop l = get_line(p, ps);
+	t = clock();
+	printf("get pos ~: %ld [%d]\n", t-t0, l);
+	t0 = clock();
+	be_loop l = get_line2(p, ps);
+	t = clock();
+	printf("get2 pos ~: %ld [%d]\n", t-t0, l);
+
+	return 0;
+}
+*/
 
 static int CmptObject_get_col(lua_State *L){
 	parser_t* p = *check_auxil(L, 1);
@@ -368,7 +423,90 @@ static int _scope_next(lua_State *L){
 }
 
 
+/*
 
+static int CmptObject_scope_sub(lua_State *L){
+	parser_t* p = *check_auxil(L, 1);
+	p->scope = scope_child(p->scope, NULL);
+	p->level++;
+	return 0;
+}
+
+static int CmptObject_scope_up(lua_State *L){
+	parser_t* p = *check_auxil(L, 1);
+	if( !(p->scope = scope_parent(p->scope)) ) luaL_error(L, "end of scope");
+	p->level--;
+	return 0;
+}
+
+static int CmptObject_scope_find(lua_State *L){
+	parser_t* p = *check_auxil(L, 1);
+	symbol_t* sym = luaL_testudata(L, 2, CMPT_SYMBOL_TNAME) ? 
+		*(symbol_t**)luaL_checkudata(L, 2, CMPT_SYMBOL_TNAME) : 
+			scope_find(p->scope, ( lua_type(L, 2)==LUA_TUSERDATA ? 
+				*(ident_t**)lua_touserdata(L, 2) : 
+				ident_add(p->idents, luaL_checkstring(L, 2)) 
+			));
+	if(sym) 
+		createCmptSymbol(L, sym);
+		// lua_rawgeti(L, LUA_REGISTRYINDEX, symbol_data(sym)); 
+	else 
+		lua_pushnil(L);
+	return 1;
+}
+
+static int CmptObject_scope_add(lua_State *L){
+	parser_t* p = *check_auxil(L, 1);
+	if(lua_isnoneornil(L, 3)) lua_newtable(L);
+	symbol_t* sym = scope_define(p->scope, 
+		( lua_type(L, 2)==LUA_TUSERDATA ? 
+			*(ident_t**)lua_touserdata(L, 2) : ident_add(p->idents, luaL_checkstring(L, 2)) ),
+		luaL_ref(L, LUA_REGISTRYINDEX)
+	);
+	if(sym) 
+		createCmptSymbol(L, sym);
+	else 
+		lua_pushnil(L);
+	// lua_pushboolean(L, sym!=NULL);
+	return 1;
+}
+
+static int scope_next_fn(lua_State *L){
+	scope_iter_t iter = lua_touserdata(L, 1);
+	if(scope_iter_end(iter)){
+		lua_pushnil(L);
+		scope_iter_delete(iter);		
+		free(iter);
+		return 1;
+	}
+	createCmptSymbol(L, scope_iter_value(iter));
+	lua_pushlightuserdata(L, scope_iter_key(iter));
+	scope_iter_next(iter);
+	return 2;
+}
+
+static int CmptObject_scope_pairs(lua_State *L){
+	parser_t* p = *check_auxil(L, 1);
+	scope_iter_t iter = scope_iter_new(p->scope, NULL);
+	lua_pushcfunction(L, scope_next_fn);
+	lua_pushlightuserdata(L, iter);
+	return 2;
+}
+
+static int CmptObject_scope_first(lua_State *L){
+	parser_t* p = *check_auxil(L, 1);
+	createCmptSymbol(L, scope_first(p->scope));
+	return 1;
+}
+
+static int _scope_next(lua_State *L){
+	symbol_t** self = luaL_checkudata(L, 1, CMPT_SYMBOL_TNAME);
+	if (!self || !(*self)) 
+		luaL_error(L, "userdata '%s' object has been freed", CMPT_SYMBOL_TNAME);
+	createCmptSymbol(L, scope_next(*self));
+	return 1;
+}
+*/
 	
 
 
@@ -626,10 +764,10 @@ ident <- !( 'do' / 'end' / 'else' ) ( [a-zA-Z_] [a-zA-Z0-9_]* )
 
 
 call <-
-	fn:lvalue _ '('   
-	_ (first:expression { return { vars.first } })? 
-	_ ( ',' _ next:expression { table.insert(self, vars.next) } _ )* 
-	')'   { return call(fn, table.unpack(self or {})) }
+	fn:lvalue _ '('    { return call(fn) }
+	_ (first:expression {  self.args = { vars.first } })? 
+	_ ( ',' _ next:expression { table.insert(self.args, vars.next) } _ )* 
+	')'   
 
 
 # idents_list <-

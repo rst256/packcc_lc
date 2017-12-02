@@ -75,7 +75,7 @@ define_mt = { __index={
 	add=function(self, var, value)
 		local var_sym = AUXIL:scope_add(var, {
 			define_in_node=self,
-			type_expr=self.te,
+			type_expr=self.type_expr,
 			is_uninitialized=(value==nil),
 			is_lvalue=true
 		})
@@ -135,7 +135,7 @@ function assign(var, value)
 end
 
 function define(t)
-	local this = setmetatable({ te=t }, define_mt)
+	local this = setmetatable({ type_expr=t }, define_mt)
 	-- local var_sym = AUXIL:scope_add(var, {
 	-- 	define_in_node=this,
 	-- 	type_expr=t,
@@ -163,7 +163,18 @@ function define_func(this)--fn, args, ret_type, body, scope)
 		is_func=true
 	})
 	if not var_sym then
-		print("redefine: ", var, AUXIL:scope_find(var))
+		var_sym = AUXIL:scope_find(this.fn);
+		if not var_sym.overloads then
+			var_sym{ overloads = 1, items={ var_sym() } }
+		end
+		var_sym.overloads = var_sym.overloads + 1
+		table.insert(var_sym.items, {
+			define_in_node=this,
+			type_expr=
+				te.ftype(this.ret_type or false, this.args or false),
+			is_func=true
+		})
+		-- print("redefine: ", var, AUXIL:scope_find(var))
 	end
 
 	-- this.scope = scope
@@ -247,8 +258,35 @@ end
 -- 	return setmetatable({ auxil=p, b=b or '', e=e or '' }, define_args_mt)
 -- end
 
-function call(fn, ...)
-	return setmetatable({ fn=fn }, call_mt)
+function call(fn, arg1, ...)
+	local this = setmetatable({ fn=fn, args=(arg1~=nil and { arg1, ... } or nil) }, call_mt)
+	local sym = AUXIL:scope_find(fn);
+	if sym then
+		if sym.overloads then
+			io.write('call:\t'..tostring(sym)..' (')
+			for k,v in ipairs{ arg1, ... } do
+				io.write(tostring(typeof(v))..', ')
+			end
+			print(')')
+a={ arg1, ... }
+			for k,v in ipairs(sym.items) do
+				print('', k, typeof(v))
+				for i,j in ipairs(typeof(v).args or {}) do
+					io.write(tostring(typeof(j))..'=='..
+					tostring(typeof(a[i]))..'='..tostring(te.typeeq(typeof(a[i]), typeof(j)))..', ')
+				end
+print(')')
+
+			end
+		else
+			print('call:', sym, arg1, ...)
+			if sym.type_expr.ret_type then
+				this.type_expr = sym.type_expr.ret_type[1]
+			end
+		end
+	end
+	return this
+
 end
 
 function if_then(cond, th, el)
@@ -305,7 +343,7 @@ function assign_mt:__tostring()
 end
 
 function define_mt:__tostring()
-	local s = tostring(self.te)..': '
+	local s = tostring(self.type_expr)..': '
 	for k=1, #self do
 		s = s..tostring(self[k])..	(k==#self and '' or ', ')
 	end
