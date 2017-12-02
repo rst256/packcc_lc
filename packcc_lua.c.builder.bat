@@ -12,7 +12,7 @@ CD %3
 
 echo ---------- Generating ... ----------
 packcc_lua -o lc_lua  %CD%\lc_lua.cc 
-:: IF NOT %ERRORLEVEL% EQU 0 GOTO error_l
+IF NOT %ERRORLEVEL% EQU 0 GOTO error_l
 :: echo successful
 
 echo --------- Preprocessing ... ---------
@@ -27,3 +27,5 @@ echo ---------- Compiling ... ----------
 
 echo ----------- Runing ... ------------
 %CD%\lc_lua.exe %CD%\lc_lua-test.lc  -i %CD%\lc_lua_h.lua -o lc_lua-test.c
+
+:error_l

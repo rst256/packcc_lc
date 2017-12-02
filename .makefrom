@@ -1,0 +1,3 @@
+test1.c: test1.c.builder.bat
+test.c: test1.c.builder.bat
+test2.c: test1.c.builder.bat

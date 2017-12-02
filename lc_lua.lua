@@ -16,6 +16,12 @@ function pcc_action_stat_0(self, auxil, capture, vars)
 
 end
 
+function pcc_action_typeid_0(self, auxil, capture, vars)
+	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
+    printf("typeid\n"); 
+
+end
+
 function pcc_action_block_0(self, auxil, capture, vars)
 	 _ENV = setmetatable(_ENV, {__index=function(s,k) return rawget(vars, k) or rawget(capture, k) end })
     auxil:scope_sub() return block(auxil:clone(), 'do', 'end') 

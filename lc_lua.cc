@@ -570,11 +570,15 @@ stats <-
 	( e:stat { table.insert(self, e) --print(auxil:pos(e.start_pos), e) } )+
 
 stat <- ( 
-		e:while_loop / e:repeat_loop / e:for_loop 
+		e:typeid/ e:while_loop / e:repeat_loop / e:for_loop 
 		/ e:continue_cmd / e:break_cmd / e:ret_stat 
 		/ e:define_func / e:if_then / e:block / e:assign 
 		/ e:unop_stat / e:define / e:call _ 
 	) { e.start_pos=_0s e.end_pos=_0e return e }
+
+
+%rule typeid { printf("typeid\n"); } 
+
 
 block <-
 	'do' { auxil:scope_sub() return block(auxil:clone(), 'do', 'end') } _ ( e:stat { table.insert(self, e) } )+ _ 'end' _ { auxil:scope_up() } _
